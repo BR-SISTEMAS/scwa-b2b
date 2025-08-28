@@ -1,0 +1,17 @@
+# T2.003 - Global layout & white-label theme
+
+Arquivos planejados:
+- frontend/src/components/Layout_T2.003.tsx
+- frontend/src/styles/whitelabel_T2.003.ts
+- frontend/src/providers/ThemeProvider_T2.003.tsx
+
+Notas:
+- Implementar sistema de tema dinâmico
+- Suporte a dark/light mode
+- CSS variables para customização fácil
+
+Arquivos criados:
+- frontend/src/components/Layout_T2.003.tsx
+- frontend/src/styles/whitelabel_T2.003.ts
+- frontend/src/app/demo/page.tsx (página de demonstração)
+- frontend/src/app/globals.css (atualizado com CSS variables)
