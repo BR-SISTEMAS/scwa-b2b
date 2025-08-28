@@ -360,3 +360,33 @@ Todas as 5 tarefas do Sprint 1 foram completadas com sucesso:
 - **Validação**: Build de produção OK, TypeScript OK, ESLint OK
 - **MCPs utilizados**: filesystem (validação de arquivos)
 - **Notas**: Sistema de notificações Sonner configurado; Tema preparado para white-label
+
+---
+
+### Sprint S3 - Chat Core & Realtime
+
+#### [S3][T3.001] - Conversation start endpoint & queue logic
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Branch**: sprint/S3_task_T3.001-conversation-queue
+- **PR**: #4 (aberto)
+- **Arquivos criados**:
+  - `/backend/src/modules/chats/chats.controller_T3.001.ts` - Controller REST com 4 endpoints
+  - `/backend/src/modules/chats/chats.service_T3.001.ts` - Serviço com lógica de fila
+  - `/backend/src/modules/chats/chats.module_T3.001.ts` - Módulo NestJS
+  - `/backend/src/modules/chats/dto/start-conversation.dto_T3.001.ts` - DTO para iniciar conversa
+  - `/backend/src/modules/chats/dto/update-queue.dto_T3.001.ts` - DTO para atualizar fila
+- **Funcionalidades implementadas**:
+  - `POST /chats/start` - Iniciar conversa e entrar na fila
+  - `GET /chats/:conversationId/queue-status` - Consultar posição e status na fila
+  - `PUT /chats/:conversationId/queue` - Atualizar status (atribuir/fechar)
+  - `GET /chats/company/:companyId/queue` - Listar fila ativa por empresa
+  - Cálculo automático de posição na fila incremental
+  - Estimativa de tempo de espera (5 min por posição)
+  - Reorganização automática da fila ao atribuir agente
+  - Persistência de mensagem inicial opcional
+- **Dependências instaladas**:
+  - Todas dependências NestJS base já instaladas anteriormente
+- **Validação**: TypeScript compilando, estrutura integrada ao AppModule
+- **Notas**: Integração com Prisma models (Conversation, Message); TODOs para guards de auth
+- **Commit**: 55e54be
