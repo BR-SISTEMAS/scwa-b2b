@@ -1,0 +1,173 @@
+# Warp Workflows for Support Chat B2B Project
+# Generated for task T0.001
+
+workflows:
+  # Development workflows
+  - name: "Start Development Environment"
+    command: "docker compose up postgres redis minio -d && echo 'Development services started'"
+    description: "Starts database, cache and storage services"
+    tags: ["dev", "start"]
+
+  - name: "Stop All Services"
+    command: "docker compose down"
+    description: "Stops all Docker services"
+    tags: ["dev", "stop"]
+
+  - name: "View Logs"
+    command: "docker compose logs -f {{service}}"
+    description: "View logs for a specific service"
+    arguments:
+      service:
+        description: "Service name (postgres, redis, minio, backend, frontend)"
+        default_value: "postgres"
+    tags: ["dev", "logs"]
+
+  # Database workflows
+  - name: "Run Database Migration"
+    command: "cd backend && npx prisma migrate dev --name {{migration_name}}"
+    description: "Creates and runs a new database migration"
+    arguments:
+      migration_name:
+        description: "Name for the migration"
+        default_value: "update"
+    tags: ["db", "migration"]
+
+  - name: "Seed Database"
+    command: "node ./database/seed/seed.js"
+    description: "Seeds the database with test data"
+    tags: ["db", "seed"]
+
+  - name: "Reset Database"
+    command: "cd backend && npx prisma migrate reset --force"
+    description: "Resets the database (WARNING: destroys all data)"
+    tags: ["db", "reset"]
+
+  - name: "Open Prisma Studio"
+    command: "cd backend && npx prisma studio"
+    description: "Opens Prisma Studio for database management"
+    tags: ["db", "studio"]
+
+  # Testing workflows
+  - name: "Run Unit Tests"
+    command: "npm test -- {{path}}"
+    description: "Runs unit tests"
+    arguments:
+      path:
+        description: "Path to test file or directory"
+        default_value: ""
+    tags: ["test", "unit"]
+
+  - name: "Run E2E Tests"
+    command: "npx playwright test {{spec}}"
+    description: "Runs Playwright E2E tests"
+    arguments:
+      spec:
+        description: "Test spec file"
+        default_value: ""
+    tags: ["test", "e2e"]
+
+  - name: "Open Playwright UI"
+    command: "npx playwright test --ui"
+    description: "Opens Playwright test UI"
+    tags: ["test", "ui"]
+
+  # Build workflows
+  - name: "Build Frontend"
+    command: "cd frontend && npm run build"
+    description: "Builds the Next.js frontend"
+    tags: ["build", "frontend"]
+
+  - name: "Build Backend"
+    command: "cd backend && npm run build"
+    description: "Builds the NestJS backend"
+    tags: ["build", "backend"]
+
+  - name: "Build All"
+    command: "npm run build --prefix frontend && npm run build --prefix backend"
+    description: "Builds both frontend and backend"
+    tags: ["build", "all"]
+
+  # Git workflows
+  - name: "Create Task Branch"
+    command: "git checkout -b sprint/S{{sprint}}_task_T{{sprint}}.{{task}}-{{desc}}"
+    description: "Creates a new branch following project convention"
+    arguments:
+      sprint:
+        description: "Sprint number (0-6)"
+        default_value: "0"
+      task:
+        description: "Task number (001-999)"
+        default_value: "001"
+      desc:
+        description: "Short description (kebab-case)"
+        default_value: "implementation"
+    tags: ["git", "branch"]
+
+  - name: "Commit Task"
+    command: "git add . && git commit -m '[S{{sprint}}][T{{sprint}}.{{task}}] - {{message}}'"
+    description: "Commits changes following project convention"
+    arguments:
+      sprint:
+        description: "Sprint number"
+        default_value: "0"
+      task:
+        description: "Task number"
+        default_value: "001"
+      message:
+        description: "Commit message"
+        default_value: "Implementation completed"
+    tags: ["git", "commit"]
+
+  # Utility workflows
+  - name: "Install Dependencies"
+    command: "npm install --prefix frontend && npm install --prefix backend"
+    description: "Installs dependencies for both frontend and backend"
+    tags: ["npm", "install"]
+
+  - name: "Clean Install"
+    command: "rm -rf frontend/node_modules backend/node_modules && npm install --prefix frontend && npm install --prefix backend"
+    description: "Clean install of all dependencies"
+    tags: ["npm", "clean"]
+
+  - name: "Format Code"
+    command: "npm run format --prefix {{project}}"
+    description: "Formats code using Prettier"
+    arguments:
+      project:
+        description: "Project to format (frontend/backend)"
+        default_value: "frontend"
+    tags: ["format", "prettier"]
+
+  - name: "Lint Code"
+    command: "npm run lint --prefix {{project}}"
+    description: "Lints code using ESLint"
+    arguments:
+      project:
+        description: "Project to lint (frontend/backend)"
+        default_value: "frontend"
+    tags: ["lint", "eslint"]
+
+  # Task management workflows
+  - name: "Create Task Folder"
+    command: "mkdir -p tasks/T{{sprint}}.{{task}} && touch tasks/T{{sprint}}.{{task}}/created_files.txt"
+    description: "Creates folder structure for a new task"
+    arguments:
+      sprint:
+        description: "Sprint number"
+        default_value: "0"
+      task:
+        description: "Task number"
+        default_value: "001"
+    tags: ["task", "create"]
+
+  - name: "View Task Status"
+    command: "cat tasks/T{{sprint}}.{{task}}/created_files.txt"
+    description: "Views files created for a specific task"
+    arguments:
+      sprint:
+        description: "Sprint number"
+        default_value: "0"
+      task:
+        description: "Task number"
+        default_value: "001"
+    tags: ["task", "status"]

@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: scwa_postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-support_chat_b2b}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - scwa_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for sessions and cache
+  redis:
+    image: redis:7-alpine
+    container_name: scwa_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - scwa_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO for S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: scwa_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - scwa_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Backend NestJS Application (placeholder - will be built in Sprint S1)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scwa_backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${DB_USERNAME:-user}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-support_chat_b2b}
+      REDIS_HOST: redis
+      S3_ENDPOINT: http://minio:9000
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+      - "${SOCKET_PORT:-3002}:3002"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - scwa_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - app
+
+  # Frontend Next.js Application (placeholder - will be built in Sprint S2)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: scwa_frontend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-3000}
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:${SOCKET_PORT:-3002}
+    ports:
+      - "${FRONTEND_PORT:-3001}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - scwa_network
+    depends_on:
+      - backend
+    profiles:
+      - app
+
+  # Nginx Reverse Proxy (for production)
+  nginx:
+    image: nginx:alpine
+    container_name: scwa_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ops/nginx/sites:/etc/nginx/sites-available:ro
+      - ./ops/ssl:/etc/nginx/ssl:ro
+    networks:
+      - scwa_network
+    depends_on:
+      - backend
+      - frontend
+    profiles:
+      - production
+
+networks:
+  scwa_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

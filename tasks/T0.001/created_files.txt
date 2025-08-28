@@ -1,0 +1,27 @@
+# Arquivos criados na tarefa T0.001
+# [S0][T0.001] - Init repo and MCP connectivity
+# Data: 2025-08-28
+
+## Diretórios criados:
+/tasks/T0.001/
+/frontend/src/pages/
+/frontend/src/components/
+/frontend/src/hooks/
+/frontend/src/styles/
+/backend/src/modules/users/
+/backend/src/modules/auth/
+/backend/src/modules/chats/
+/backend/src/modules/tickets/
+/backend/src/modules/metrics/
+/database/migrations/
+/database/seed/
+/ops/mcp-server/
+/ops/tests/playwright/
+/.github/workflows/
+
+## Arquivos que serão criados:
+/README.md
+/.env.example
+/docker-compose.yml
+/ops/warp.yaml
+/.gitignore

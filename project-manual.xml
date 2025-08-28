@@ -1,0 +1,786 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project-manual>
+  <meta>
+    <project-name>Support Chat B2B (Brasil)</project-name>
+    <purpose>
+      Desenvolvimento completo de sistema de chat de suporte B2B (web) com:
+      Login multi-tenant (empresa cliente + atendente), filas, transferências,
+      histórico exportável, gravação/upload de arquivos e áudio, painel de gerência,
+      métricas, segurança/LGPD.
+    </purpose>
+    <primary-stack>
+      <frontend>Next.js (React) + shadcn/ui + Tailwind</frontend>
+      <backend>NestJS (Node.js) + Socket.IO</backend>
+      <database>PostgreSQL (preferência) - Prisma ORM</database>
+      <realtime>Socket.IO</realtime>
+      <tests>Playwright (E2E) + Jest (unit)</tests>
+      <ci>GitHub Actions</ci>
+      <container>Docker / docker-compose</container>
+      <mcp-providers>
+        <mcp>filesystem</mcp>
+        <mcp>github</mcp>
+        <mcp>context7</mcp>
+        <mcp>playwright</mcp>
+        <mcp>manual-xml</mcp>
+      </mcp-providers>
+    </primary-stack>
+    <agent-contract>
+      <always-read>manual-xml (this file) before starting any task</always-read>
+      <consult>context7 MCP for any uncertain library usage, API signature or best practice before coding</consult>
+      <inspect>filesystem MCP to list/validate files and the /tasks directory before edits</inspect>
+      <test>use playwright MCP for UI flows after implementation</test>
+      <commit>use github MCP for commits/branches/PRs</commit>
+      <update-root-readme>update README.md at project root after each task/sprint</update-root-readme>
+    </agent-contract>
+  </meta>
+
+  <!-- Naming, folder, and task ID conventions -->
+  <conventions>
+    <task-id-format>T{S}{NNN}</task-id-format>
+    <example-task-id>T1.001</example-task-id>
+    <file-naming>
+      <rule>Files created or modified for a task must include the task ID suffix before the extension</rule>
+      <example>/frontend/src/pages/home_T1.008.tsx</example>
+    </file-naming>
+    <task-folder>
+      <rule>For each task create a folder /tasks/T{S}.{NNN} that contains:
+        created_files.txt, changes.diff (if any), run_logs.txt, test_results.xml</rule>
+      <example>/tasks/T1.002/created_files.txt</example>
+    </task-folder>
+    <branch-format>sprint/S{S}_task_T{S}.{NNN}-{short-desc}</branch-format>
+    <commit-message-format>[S{S}][T{S}.{NNN}] - short description</commit-message-format>
+    <pr-format>PR: S{S} - T{S}.{NNN} - short description</pr-format>
+  </conventions>
+
+  <!-- Repo structure the agent must create -->
+  <repository-structure>
+    <root-files>
+      <file>README.md (single living document: sprint log & status)</file>
+      <file>manual-xml (this file, immutable source of tasks)</file>
+      <file>.env.example</file>
+      <file>docker-compose.yml</file>
+      <file>ops/warp.yaml (workflows)</file>
+      <file>tasks/ (task folders auto-created by agent)</file>
+    </root-files>
+
+    <directories>
+      <dir>/frontend</dir>
+      <dir>/frontend/src/pages</dir>
+      <dir>/frontend/src/components</dir>
+      <dir>/frontend/src/hooks</dir>
+      <dir>/frontend/src/styles</dir>
+
+      <dir>/backend</dir>
+      <dir>/backend/src/modules/users</dir>
+      <dir>/backend/src/modules/auth</dir>
+      <dir>/backend/src/modules/chats</dir>
+      <dir>/backend/src/modules/tickets</dir>
+      <dir>/backend/src/modules/metrics</dir>
+
+      <dir>/database</dir>
+      <dir>/database/migrations</dir>
+      <dir>/database/seed</dir>
+
+      <dir>/ops</dir>
+      <dir>/ops/mcp-server</dir>
+      <dir>/ops/tests/playwright</dir>
+      <dir>/tasks</dir>
+    </directories>
+  </repository-structure>
+
+  <!-- Database schema (core tables) -->
+  <database-schema engine="postgresql" orm="prisma">
+    <table name="companies">
+      <column name="id" type="uuid" pk="true" />
+      <column name="name" type="varchar(255)" />
+      <column name="cnpj" type="varchar(20)" />
+      <column name="contact_email" type="varchar(255)" />
+      <column name="created_at" type="timestamp" />
+    </table>
+
+    <table name="users">
+      <column name="id" type="uuid" pk="true" />
+      <column name="company_id" type="uuid" fk="companies.id" />
+      <column name="email" type="varchar(255)" />
+      <column name="password_hash" type="varchar(255)" />
+      <column name="name" type="varchar(255)" />
+      <column name="role" type="enum(user,agent,manager,admin)" />
+      <column name="profile_photo_url" type="varchar(512)" nullable="true" />
+      <column name="created_at" type="timestamp" />
+      <index columns="company_id" />
+    </table>
+
+    <table name="conversations">
+      <column name="id" type="uuid" pk="true" />
+      <column name="company_id" type="uuid" fk="companies.id" />
+      <column name="client_user_id" type="uuid" nullable="true" /> <!-- guest or registered -->
+      <column name="agent_user_id" type="uuid" nullable="true" /> <!-- assigned agent -->
+      <column name="status" type="enum(open,waiting,assigned,closed)" />
+      <column name="queue_position" type="int" nullable="true" />
+      <column name="started_at" type="timestamp" />
+      <column name="closed_at" type="timestamp" nullable="true" />
+      <column name="metadata" type="jsonb" />
+    </table>
+
+    <table name="messages">
+      <column name="id" type="uuid" pk="true" />
+      <column name="conversation_id" type="uuid" fk="conversations.id" />
+      <column name="sender_id" type="uuid" nullable="true" /> <!-- user or system -->
+      <column name="sender_type" type="enum(client,agent,system)" />
+      <column name="content_json" type="jsonb" /> <!-- always store original message JSON -->
+      <column name="content_text" type="text" /> <!-- plain text for quick search -->
+      <column name="attachments" type="jsonb" /> <!-- list of files (url, type, size) -->
+      <column name="audio_url" type="varchar(512)" nullable="true" />
+      <column name="created_at" type="timestamp" />
+      <index columns="conversation_id, created_at" />
+    </table>
+
+    <table name="tickets"> <!-- OS records -->
+      <column name="id" type="uuid" pk="true" />
+      <column name="conversation_id" type="uuid" fk="conversations.id" />
+      <column name="title" type="varchar(255)" />
+      <column name="description" type="text" />
+      <column name="status" type="enum(open,in_progress,resolved,closed)" />
+      <column name="created_by" type="uuid" />
+      <column name="assigned_to" type="uuid" nullable="true" />
+      <column name="created_at" type="timestamp" />
+      <column name="updated_at" type="timestamp" />
+    </table>
+
+    <table name="evaluations">
+      <column name="id" type="uuid" pk="true" />
+      <column name="conversation_id" type="uuid" fk="conversations.id" />
+      <column name="rating" type="int" />
+      <column name="comment" type="text" nullable="true" />
+      <column name="created_at" type="timestamp" />
+    </table>
+
+    <table name="audit_logs">
+      <column name="id" type="uuid" pk="true" />
+      <column name="actor_id" type="uuid" />
+      <column name="action" type="varchar(255)" />
+      <column name="payload" type="jsonb" />
+      <column name="created_at" type="timestamp" />
+    </table>
+
+    <table name="metrics_cache">
+      <column name="id" type="uuid" pk="true" />
+      <column name="key" type="varchar(255)" />
+      <column name="value" type="jsonb" />
+      <column name="updated_at" type="timestamp" />
+    </table>
+  </database-schema>
+
+  <!-- API endpoints mapping to tasks -->
+  <api-spec>
+    <public>
+      <endpoint method="POST" path="/api/auth/login">Authenticate user (email/password)</endpoint>
+      <endpoint method="POST" path="/api/auth/logout">Invalidate session</endpoint>
+      <endpoint method="POST" path="/api/conversations">Start a conversation (client)</endpoint>
+      <endpoint method="GET" path="/api/conversations/{id}/messages">Get conversation messages</endpoint>
+      <endpoint method="POST" path="/api/conversations/{id}/messages">Send message (client-side)</endpoint>
+      <endpoint method="POST" path="/api/conversations/{id}/attachments">Upload attachment</endpoint>
+    </public>
+
+    <internal>
+      <endpoint method="GET" path="/api/agents/queues">Get queue for agents</endpoint>
+      <endpoint method="POST" path="/api/agents/assign">Agent accepts/claims conversation</endpoint>
+      <endpoint method="POST" path="/api/agents/transfer">Transfer conversation to another agent</endpoint>
+      <endpoint method="POST" path="/api/conversations/{id}/close">Close conversation (agent or client)</endpoint>
+      <endpoint method="POST" path="/api/conversations/{id}/reopen">Reopen conversation (agent)</endpoint>
+      <endpoint method="GET" path="/api/manager/metrics">Manager metrics (filter by day/week/month/company/agent)</endpoint>
+      <endpoint method="POST" path="/api/export/xml/conversation/{id}">Export conversation as XML (ERP consumable)</endpoint>
+      <endpoint method="POST" path="/api/export/pdf/conversation/{id}">Export conversation as PDF</endpoint>
+      <endpoint method="POST" path="/api/users/{id}/deactivate">Deactivate user (GDPR/Destruction)</endpoint>
+      <endpoint method="GET" path="/api/audit/logs">Audit logs</endpoint>
+    </internal>
+  </api-spec>
+
+  <!-- Feature requirements & acceptance criteria per area -->
+  <features>
+
+    <authentication>
+      <description>JWT based access tokens for API; refresh tokens stored server-side. Passwords hashed with bcrypt/argon2.</description>
+      <acceptance>
+        <item>Separate roles: client, agent, manager, admin</item>
+        <item>Login page for clients and agents (different flows)</item>
+        <item>Session expiration policy and revoke endpoints</item>
+      </acceptance>
+    </authentication>
+
+    <multi-tenant-company-binding>
+      <description>Users linked to companies. Manager role scoped to company. Agent can be global or company-scoped.</description>
+      <acceptance>
+        <item>Company CRUD for manager</item>
+        <item>Company-level filtering on metrics</item>
+      </acceptance>
+    </multi-tenant-company-binding>
+
+    <chat-queue-flow>
+      <description>
+        Clients start conversation → enters queue → agents see queue and claim → assigned agent handles → agent can transfer to another agent → agent or client can close → agent can reopen.
+      </description>
+      <acceptance>
+        <item>Queue position updated atomically in DB</item>
+        <item>Atomic assign/transfer endpoints</item>
+        <item>Notifications to agents (socket events)</item>
+      </acceptance>
+    </chat-queue-flow>
+
+    <history-and-export>
+      <description>All conversations stored; messages stored as JSON for IA training; export endpoints produce XML & PDF; email sending option.</description>
+      <acceptance>
+        <item>JSON transcript saved for each conversation</item>
+        <item>Export XML must follow /ops/erp/erp-xsd (provide mapping in ep)</item>
+        <item>PDF export path with generation job (server-side)</item>
+      </acceptance>
+    </history-and-export>
+
+    <manager-dashboard>
+      <description>Manager can monitor agents, intercept conversations, create/delete agents, view filters by day/week/month/company, view metrics per agent or aggregate.</description>
+      <acceptance>
+        <item>Realtime metrics via socket or polling</item>
+        <item>Historical queries via SQL optimized queries or materialized views</item>
+        <item>Audit trail for manager actions</item>
+      </acceptance>
+    </manager-dashboard>
+
+    <file-and-audio>
+      <description>Upload/download of files, images, and audio; audio recording in browser; store files on S3-compatible storage with signed URLs.</description>
+      <acceptance>
+        <item>Upload endpoint with virus-scan placeholder (integrate later)</item>
+        <item>Audio recording component in frontend using MediaRecorder</item>
+        <item>Audio stored as mp3/ogg with reference in messages.attachments</item>
+      </acceptance>
+    </file-and-audio>
+
+    <ui-and-theme>
+      <description>UI similar to modern AI chat interfaces, rounded components, modular tokens, easy white-label theme switch.</description>
+      <acceptance>
+        <item>Global theme file /frontend/src/styles/theme.ts with tokens for colors/spacing/rounding</item>
+        <item>shadcn/ui components used and extended with theme tokens</item>
+      </acceptance>
+    </ui-and-theme>
+
+    <security-and-lgpd>
+      <description>Design compatible with Brazilian LGPD and enterprise B2B requirements.</description>
+      <requirements>
+        <item>TLS for all endpoints</item>
+        <item>Encryption at rest for sensitive fields (passwords always hashed; optionally field-level encryption for CPF/CNPJ)</item>
+        <item>Audit logs for sensitive actions</item>
+        <item>Endpoints for data export & data deletion (right to be forgotten)</item>
+        <item>Consent recording for client registration and storage</item>
+        <item>Retention policy (configurable) with scheduled deletion job</item>
+      </requirements>
+    </security-and-lgpd>
+
+  </features>
+
+  <!-- Sprints: each sprint broken down into tasks with actions and validation -->
+  <sprints>
+
+    <!-- Sprint 0: Repo init & global configs -->
+    <sprint id="S0" name="Repository init & infrastructure" priority="high">
+      <description>Initialize repository, configure MCPs, create README draft, add warp/workflows, docker compose and CI baseline.</description>
+      <tasks>
+        <task id="T0.001" title="Init repo and MCP connectivity">
+          <description>Create repository, connect GitHub MCP, configure filesystem MCP, register context7 and playwright MCPs in Warp.</description>
+          <actions>
+            <action>Create repo skeleton (folders & root files)</action>
+            <action>Create /tasks/T0.001 and record created_files.txt</action>
+            <command>git init; git remote add origin &lt;your-repo-url&gt;</command>
+            <validation>Confirm MCP connections reachable (ping or status)</validation>
+            <post>
+              <commit>[S0][T0.001] - repository skeleton and MCP registrations</commit>
+              <update-readme>Add Sprints list and Task index stub</update-readme>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T0.002" title="Create README initial & manual-xml">
+          <description>Write initial README.md with sprint list, contribution guide, env description and update manual-xml pointer.</description>
+          <actions>
+            <action>Create README.md: include Sprints outline, commit/branch conventions, deploy commands, env vars</action>
+            <action>Create this manual-xml at root (if not present)</action>
+            <validation>Agent must ensure README.md includes 'How I operate' section mapping to MCP usage</validation>
+            <post>
+              <commit>[S0][T0.002] - README initial and manual-xml added</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T0.003" title="Ops: warp workflows, docker-compose and CI baseline">
+          <description>Create ops/warp.yaml, docker-compose.yml with db service, placeholder app services and GitHub Actions CI that runs lint/build/tests.</description>
+          <actions>
+            <create-file>/ops/warp.yaml</create-file>
+            <create-file>/docker-compose.yml</create-file>
+            <create-file>/.github/workflows/ci.yml</create-file>
+            <validation>CI should run npm run lint and npm test in both frontend/backend</validation>
+            <post>
+              <commit>[S0][T0.003] - ops workflows, docker-compose and CI baseline</commit>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+    <!-- Sprint 1: Backend foundation -->
+    <sprint id="S1" name="Backend foundation" priority="high">
+      <description>Scaffold NestJS backend, configure Prisma, database connection, basic auth and user model.</description>
+      <tasks>
+        <task id="T1.001" title="Scaffold NestJS app">
+          <actions>
+            <command>nest new backend --package-manager npm</command>
+            <create-folders>/backend/src/modules/auth /backend/src/modules/users /backend/src/modules/chats /backend/src/modules/tickets</create-folders>
+            <post>
+              <commit>[S1][T1.001] - nestjs scaffold</commit>
+              <created-files>/backend/package.json, /backend/src/main.ts</created-files>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T1.002" title="Prisma & DB connection">
+          <actions>
+            <command>npm install prisma @prisma/client --prefix backend</command>
+            <command>npx prisma init --schema=./database/schema_T1.002.prisma</command>
+            <create-file>/database/.env.example (DB URL template)</create-file>
+            <validation>Run npx prisma migrate dev --name init in dev</validation>
+            <post>
+              <commit>[S1][T1.002] - prisma setup and schema init</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T1.003" title="Auth: JWT, roles and password hashing">
+          <actions>
+            <create-file>/backend/src/modules/auth/auth.module_T1.003.ts</create-file>
+            <create-file>/backend/src/modules/auth/jwt.strategy_T1.003.ts</create-file>
+            <create-file>/backend/src/modules/auth/local.strategy_T1.003.ts</create-file>
+            <validation>
+              <command>run backend unit tests for auth</command>
+              <note>Ensure password hashed using bcrypt/argon2</note>
+            </validation>
+            <post>
+              <commit>[S1][T1.003] - auth and roles implemented</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T1.004" title="Users & companies CRUD">
+          <actions>
+            <create-file>/backend/src/modules/users/users.service_T1.004.ts</create-file>
+            <create-file>/backend/src/modules/users/users.controller_T1.004.ts</create-file>
+            <create-file>/backend/src/modules/companies/companies.service_T1.004.ts</create-file>
+            <validation>Run seed + basic CRUD tests</validation>
+            <post>
+              <commit>[S1][T1.004] - users and companies CRUD</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T1.005" title="Audit logging & retention job">
+          <actions>
+            <create-file>/backend/src/modules/audit/audit.service_T1.005.ts</create-file>
+            <create-file>/backend/src/jobs/retention.job_T1.005.ts</create-file>
+            <validation>Log events on user create, login, conversation assign, export</validation>
+            <post>
+              <commit>[S1][T1.005] - audit log and retention job</commit>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+    <!-- Sprint 2: Frontend foundation -->
+    <sprint id="S2" name="Frontend foundation" priority="high">
+      <description>Scaffold Next.js app, configure shadcn/ui theme tokens, auth flows (login pages for client/agent).</description>
+      <tasks>
+        <task id="T2.001" title="Scaffold Next.js + shadcn/ui">
+          <actions>
+            <command>npx create-next-app@latest frontend --typescript</command>
+            <command>npm install tailwindcss postcss autoprefixer</command>
+            <command>npm install shadcn/ui</command>
+            <create-file>/frontend/src/styles/theme_T2.001.ts</create-file>
+            <post>
+              <commit>[S2][T2.001] - frontend scaffold and theme tokens</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T2.002" title="Login pages (client & agent)">
+          <actions>
+            <create-file>/frontend/src/pages/login_client_T2.002.tsx</create-file>
+            <create-file>/frontend/src/pages/login_agent_T2.002.tsx</create-file>
+            <create-file>/frontend/src/components/AuthForm_T2.002.tsx</create-file>
+            <validation>Playwright test: login flow for client and for agent (mocked backend)</validation>
+            <post>
+              <commit>[S2][T2.002] - login pages created</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T2.003" title="Global layout & white-label theme">
+          <actions>
+            <create-file>/frontend/src/components/Layout_T2.003.tsx</create-file>
+            <create-file>/frontend/src/styles/whitelabel_T2.003.ts</create-file>
+            <validation>Switch theme test (light/dark/company colors)</validation>
+            <post>
+              <commit>[S2][T2.003] - layout and theming</commit>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+    <!-- Sprint 3: Chat core -->
+    <sprint id="S3" name="Chat core & realtime" priority="high">
+      <description>Implement chat conversation lifecycle: queue, assign, transfer, message persistence, attachments and audio.</description>
+      <tasks>
+        <task id="T3.001" title="Conversation start endpoint & queue logic">
+          <actions>
+            <create-file>/backend/src/modules/chats/chats.controller_T3.001.ts</create-file>
+            <create-file>/backend/src/modules/chats/chats.service_T3.001.ts</create-file>
+            <validation>Simulate start conversation and verify queue_position and conversations record</validation>
+            <post>
+              <commit>[S3][T3.001] - conversation start and queue</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T3.002" title="Socket.IO integration (server) and channel model">
+          <actions>
+            <create-file>/backend/src/modules/chats/socket.gateway_T3.002.ts</create-file>
+            <create-file>/backend/src/modules/chats/events_T3.002.ts</create-file>
+            <validation>Socket event tests (connect, join, message)</validation>
+            <post>
+              <commit>[S3][T3.002] - socket integration implemented</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T3.003" title="Socket hooks (client) and chat UI basic">
+          <actions>
+            <create-file>/frontend/src/hooks/useChatSocket_T3.003.ts</create-file>
+            <create-file>/frontend/src/pages/chat_T3.003.tsx</create-file>
+            <validation>Playwright E2E: client opens chat, messages appear, agent receives message</validation>
+            <post>
+              <commit>[S3][T3.003] - chat UI & client socket hooks</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T3.004" title="Attachments, uploads and audio recording">
+          <actions>
+            <create-file>/backend/src/modules/chats/attachments.controller_T3.004.ts</create-file>
+            <create-file>/frontend/src/components/UploadAttachment_T3.004.tsx</create-file>
+            <create-file>/frontend/src/components/AudioRecorder_T3.004.tsx</create-file>
+            <validation>Upload flow test (Playwright) and audio record/playback</validation>
+            <post>
+              <commit>[S3][T3.004] - attachments and audio recording</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T3.005" title="Persist messages as JSON and transcript storage">
+          <actions>
+            <create-file>/backend/src/modules/chats/messages.service_T3.005.ts</create-file>
+            <create-file>/backend/src/jobs/transcript_save.job_T3.005.ts</create-file>
+            <validation>Ensure message JSON stored in messages.content_json and a transcript JSON generated for conversation</validation>
+            <post>
+              <commit>[S3][T3.005] - message persistence & transcript generation</commit>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+    <!-- Sprint 4: Agent workflows & management -->
+    <sprint id="S4" name="Agent flows & manager panel" priority="high">
+      <description>Agent acceptance/transfer/close/reopen flows; manager dashboard and metrics; ability to intercept conversations.</description>
+      <tasks>
+        <task id="T4.001" title="Agent accept/assign/transfer endpoints">
+          <actions>
+            <create-file>/backend/src/modules/chats/assign.controller_T4.001.ts</create-file>
+            <create-file>/backend/src/modules/chats/transfer.service_T4.001.ts</create-file>
+            <validation>Concurrency tests for transfer/assign (simulate race condition)</validation>
+            <post>
+              <commit>[S4][T4.001] - agent assign & transfer implemented</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T4.002" title="Agent features: queue view & conversation management">
+          <actions>
+            <create-file>/frontend/src/pages/agent/queue_T4.002.tsx</create-file>
+            <create-file>/frontend/src/pages/agent/conversation_T4.002.tsx</create-file>
+            <validation>Playwright E2E: agent claims, transfers, closes conversation</validation>
+            <post>
+              <commit>[S4][T4.002] - agent UI implemented</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T4.003" title="Manager dashboard & metrics">
+          <actions>
+            <create-file>/frontend/src/pages/manager/dashboard_T4.003.tsx</create-file>
+            <create-file>/backend/src/modules/metrics/metrics.service_T4.003.ts</create-file>
+            <validation>Metrics query smoke test; manager filter by day/week/month/company/agent</validation>
+            <post>
+              <commit>[S4][T4.003] - manager dashboard and metrics</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T4.004" title="Manager actions: create agent, intercept conversation">
+          <actions>
+            <create-file>/backend/src/modules/manager/manager.controller_T4.004.ts</create-file>
+            <create-file>/frontend/src/pages/manager/users_T4.004.tsx</create-file>
+            <validation>Manager can create agent; intercepts appear in agent UI</validation>
+            <post>
+              <commit>[S4][T4.004] - manager user control & intercept</commit>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+    <!-- Sprint 5: History, exports, evaluation & GDPR features -->
+    <sprint id="S5" name="History, export & LGPD" priority="high">
+      <description>Full history features (pdf, email, json transcript), evaluation, consent, data export & deletion (GDPR/LGPD endpoints).</description>
+      <tasks>
+        <task id="T5.001" title="Conversation history UI & search">
+          <actions>
+            <create-file>/frontend/src/pages/history_T5.001.tsx</create-file>
+            <create-file>/backend/src/modules/search/search.service_T5.001.ts</create-file>
+            <validation>Search & filter by company, user, date range</validation>
+            <post>
+              <commit>[S5][T5.001] - history & search</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T5.002" title="Export PDF & Email share">
+          <actions>
+            <create-file>/backend/src/modules/export/pdf.service_T5.002.ts</create-file>
+            <create-file>/backend/src/modules/export/email.service_T5.002.ts</create-file>
+            <validation>Generate pdf and send email to test recipient (mock SMTP)</validation>
+            <post>
+              <commit>[S5][T5.002] - pdf & email export features</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T5.003" title="Export XML for ERP">
+          <actions>
+            <create-file>/backend/src/modules/export/erp-xml.service_T5.003.ts</create-file>
+            <create-file>/ops/erp/erp-mapping_T5.003.xml</create-file>
+            <validation>Endpoint /api/export/xml/conversation/{id} returns valid XML matching mapping</validation>
+            <post>
+              <commit>[S5][T5.003] - erp xml export</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T5.004" title="GDPR / LGPD endpoints (export & delete)">
+          <actions>
+            <create-file>/backend/src/modules/privacy/privacy.controller_T5.004.ts</create-file>
+            <validation>Data export endpoint and deletion endpoint tested and audited in logs</validation>
+            <post>
+              <commit>[S5][T5.004] - data export and deletion (LGPD)</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T5.005" title="Conversation evaluation (client) and metrics ingestion">
+          <actions>
+            <create-file>/frontend/src/components/EvaluateConversation_T5.005.tsx</create-file>
+            <create-file>/backend/src/modules/evaluations/evaluations.service_T5.005.ts</create-file>
+            <validation>Client can rate conversation and rating appears on manager metrics</validation>
+            <post>
+              <commit>[S5][T5.005] - evaluations implemented</commit>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+    <!-- Sprint 6: Hardening, CI, infra, production build -->
+    <sprint id="S6" name="Hardening & production readiness" priority="high">
+      <description>Security hardening, CI polishing, SAST, dependency audit, Docker production images, deployment pipeline.</description>
+      <tasks>
+        <task id="T6.001" title="Security: TLS enforcement, env secret management">
+          <actions>
+            <create-file>/ops/k8s-or-docker/README_T6.001.md</create-file>
+            <validation>All endpoints require TLS in production; secrets read from env and/or secret manager</validation>
+            <post>
+              <commit>[S6][T6.001] - security baseline</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T6.002" title="SAST & dependency checks in CI">
+          <actions>
+            <create-file>/.github/workflows/security.yml</create-file>
+            <validation>Run npm audit, snyk or dependabot checks; fail pipeline on high vulnerabilities</validation>
+            <post>
+              <commit>[S6][T6.002] - ci security checks</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T6.003" title="Production Docker images & deploy job">
+          <actions>
+            <create-file>/Dockerfile.frontend_T6.003</create-file>
+            <create-file>/Dockerfile.backend_T6.003</create-file>
+            <create-file>/ops/deploy/README_T6.003.md</create-file>
+            <validation>Run docker-compose up --build and test in staging</validation>
+            <post>
+              <commit>[S6][T6.003] - production images and deploy instructions</commit>
+            </post>
+          </actions>
+        </task>
+
+        <task id="T6.004" title="Final E2E regression run & release tag">
+          <actions>
+            <command>Run full Playwright suite via MCP playwright</command>
+            <validation>All major E2E flows must pass (login, start chat, agent claim, send file, export PDF/XML)</validation>
+            <post>
+              <commit>[S6][T6.004] - release candidate tests passed</commit>
+              <tag>v0.1.0-rc</tag>
+            </post>
+          </actions>
+        </task>
+      </tasks>
+    </sprint>
+
+  </sprints>
+
+  <!-- Agent runtime routine, step-by-step for each Task -->
+  <agent-rules>
+    <precondition>Before doing anything, agent must fetch and parse this manual-xml and confirm current Sprint & Task</precondition>
+
+    <routine>
+      <step-order>1</step-order>
+      <step action="identify-task">Read README.md and manual-xml; determine next pending Task ID and Sprint</step>
+
+      <step-order>2</step-order>
+      <step action="create-task-folder">Create /tasks/{TaskID}/ and log created_files.txt (agent writes list of files it will create)</step>
+
+      <step-order>3</step-order>
+      <step action="consult-docs">If implementation details unclear, consult context7 MCP for library usage, API signatures, or examples</step>
+
+      <step-order>4</step-order>
+      <step action="implement">
+        <description>Create or modify files with TaskID suffix. For every created file, append path to /tasks/{TaskID}/created_files.txt.</description>
+      </step>
+
+      <step-order>5</step-order>
+      <step action="local-validate">
+        <description>Run linter, unit tests (jest), and build. Example commands:
+          npm run lint (root) ; npm run build --prefix backend ; npm run build --prefix frontend
+        </description>
+        <on-failure>
+          <action>Record logs to /tasks/{TaskID}/run_logs.txt, attempt single automated fix if safe (formatting or import), re-run validations.</action>
+        </on-failure>
+      </step>
+
+      <step-order>6</step-order>
+      <step action="e2e-validate">
+        <description>Run Playwright tests relevant to the Task via playwright MCP. Add test result to /tasks/{TaskID}/test_results.xml</description>
+      </step>
+
+      <step-order>7</step-order>
+      <step action="audit-and-logs">Write audit log entry via backend audit endpoint for the action performed (create/modify).</step>
+
+      <step-order>8</step-order>
+      <step action="git-commit">
+        <description>Create branch named per convention, stage changes, commit using the commit message format, open PR (if configured) and push. Example:
+          git checkout -b sprint/S{S}_task_T{S}.{NNN}-short-desc
+          git add .
+          git commit -m "[S{S}][T{S}.{NNN}] - Implemented X"
+          git push origin <branch>
+        </description>
+      </step>
+
+      <step-order>9</step-order>
+      <step action="update-readme">
+        <description>Append a clear entry to README.md summarizing the Task: ID, short description, files added, tests run, ticket/state (done/in-progress), timestamp, commit hash and PR link (if any).</description>
+        <example>
+          - [S3][T3.003] - Chat UI & sockets implemented — commit abc123 — PR #12 — completed 2025-08-28
+        </example>
+      </step>
+
+      <step-order>10</step-order>
+      <step action="context7-note">If any library used newer than doc available, record note and timestamp in /tasks/{TaskID}/created_files.txt and in README.md for future review</step>
+
+      <final>Move to next Task (re-read manual-xml to pick next pending task)</final>
+    </routine>
+  </agent-rules>
+
+  <!-- Validation, CI thresholds and quality gates -->
+  <quality-gates>
+    <lint>Failures must be fixed before commit unless the failure is in autogenerated file; otherwise create task to fix</lint>
+    <unit-tests>Unit test coverage >= 70% for backend modules implemented in a sprint</unit-tests>
+    <e2e>All Playwright critical flow tests (login, start chat, send message, download file, export xml/pdf) must pass</e2e>
+    <security>CI must run dependency audit; any critical vulnerability blocks merge to main</security>
+    <code-review>
+      <rule>Agent must open PR and add a reviewer (human or configured bot). PR must be merged only after passing CI</rule>
+    </code-review>
+  </quality-gates>
+
+  <!-- Deployment & run commands (developer reference for agent) -->
+  <ops-commands>
+    <dev-frontend>cd frontend && npm run dev</dev-frontend>
+    <dev-backend>cd backend && npm run start:dev</dev-backend>
+    <db-migrate>npx prisma migrate dev --preview-feature</db-migrate>
+    <seed>node ./database/seed/seed.js</seed>
+    <build>npm run build --prefix frontend ; npm run build --prefix backend</build>
+    <docker-up>docker compose up --build</docker-up>
+    <playwright-run>npx playwright test --project=chromium</playwright-run>
+  </ops-commands>
+
+  <!-- Important security & LGPD checklist for each sprint -->
+  <lgpd-checklist>
+    <for-each-sprint>
+      <item>Verify that any personal data added is marked with retention policy in DB metadata</item>
+      <item>Ensure endpoints that return personal data require proper scope checks</item>
+      <item>Log data export/delete actions to audit_logs</item>
+      <item>Store consent timestamps for user registration</item>
+      <item>Do not store raw passwords; always store password_hash only</item>
+    </for-each-sprint>
+  </lgpd-checklist>
+
+  <!-- Example of how to format a README.md update (agent must append similar entry) -->
+  <readme-update-example>
+    <![CDATA[
+    ## Sprint S3 - Chat core (summary)
+
+    - [S3][T3.001] Conversation start endpoint implemented
+      - Files: /backend/src/modules/chats/chats.controller_T3.001.ts
+      - Commit: abc123
+      - Tests: unit & Playwright basic flow passed
+      - Notes: queue_position uses optimistic locking
+
+    - [S3][T3.003] Client chat UI created
+      - Files: /frontend/src/pages/chat_T3.003.tsx, /frontend/src/hooks/useChatSocket_T3.003.ts
+      - Commit: def456
+      - PR: #22
+      - Completed: 2025-08-28
+    ]]>
+  </readme-update-example>
+
+  <!-- Final note to the agent -->
+  <final-instruction>
+    <text>
+      You must follow this manual strictly. For each task:
+      1) read this manual (manual-xml)
+      2) consult context7 for library specifics if needed
+      3) create files/folders with TaskID suffix
+      4) run local validation + playwright tests
+      5) create task folder under /tasks/T{S}.{NNN} with logs and created files
+      6) commit & open PR via github MCP
+      7) update README.md with a structured summary
+    </text>
+  </final-instruction>
+
+</project-manual>
