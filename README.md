@@ -147,10 +147,10 @@ npm update
 ### Sprint S0 - Repository init & infrastructure ✅ COMPLETO
 Inicialização do repositório, configuração de MCPs, README draft, workflows e CI baseline.
 
-### Sprint S1 - Backend foundation 🔨 Em Progresso
+### Sprint S1 - Backend foundation ✅ COMPLETO
 Scaffold NestJS, Prisma, conexão DB, autenticação básica e modelo de usuário.
 
-### Sprint S2 - Frontend foundation
+### Sprint S2 - Frontend foundation 🔨 Em Progresso
 Scaffold Next.js, configurar shadcn/ui, fluxos de autenticação.
 
 ### Sprint S3 - Chat core & realtime
@@ -324,3 +324,39 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
   - @nestjs/schedule (para cron jobs)
 - **Validação**: Estrutura criada, código TypeScript válido
 - **Notas**: Sistema preparado para integração com S3 para exclusão de arquivos físicos; Logs LGPD preservados indefinidamente
+- **Commit**: e7992f7
+
+---
+
+### 🎉 Sprint S1 Concluído!
+
+Todas as 5 tarefas do Sprint 1 foram completadas com sucesso:
+- ✅ Backend NestJS scaffolded
+- ✅ Prisma & PostgreSQL configurados
+- ✅ Sistema de autenticação JWT
+- ✅ CRUD de usuários e empresas
+- ✅ Sistema de auditoria e retenção LGPD
+
+---
+
+### Sprint S2 - Frontend Foundation
+
+#### [S2][T2.001] - Scaffold Next.js + shadcn/ui
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Branch**: sprint/S2_task_T2.001-nextjs-scaffold
+- **Arquivos criados/modificados**:
+  - `/frontend/` - App Next.js completo
+  - `/frontend/src/app/layout.tsx` - Layout principal com tema
+  - `/frontend/src/app/page.tsx` - Página inicial showcase
+  - `/frontend/src/styles/theme_T2.001.ts` - Sistema de tema white-label
+  - `/frontend/src/components/ui/` - 7 componentes shadcn/ui
+- **Funcionalidades implementadas**:
+  - Next.js 15.5.2 com App Router e TypeScript
+  - shadcn/ui integrado com Tailwind CSS v4
+  - Sistema de tema completo (cores, tipografia, espaçamentos)
+  - Página inicial responsiva com showcase de features
+  - Componentes: Button, Card, Input, Label, Badge, Avatar, Sonner
+- **Validação**: Build de produção OK, TypeScript OK, ESLint OK
+- **MCPs utilizados**: filesystem (validação de arquivos)
+- **Notas**: Sistema de notificações Sonner configurado; Tema preparado para white-label
