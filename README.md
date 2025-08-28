@@ -234,3 +234,15 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
   - filesystem: Validação de arquivos
 - **Validação**: Projeto NestJS criado com sucesso, TypeScript configurado
 - **Notas**: ESLint, Prettier e Jest pré-configurados pelo NestJS CLI
+
+#### [S1][T1.002] - Prisma & DB connection
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Arquivos criados/modificados**:
+  - `/database/schema_T1.002.prisma` com todos os modelos (companies, users, conversations, messages, tickets, evaluations, audit_logs, metrics_cache)
+  - `/backend/src/prisma/prisma.service_T1.002.ts` e `/backend/src/prisma/prisma.module_T1.002.ts`
+  - `/backend/src/app.module.ts` atualizado para importar PrismaModule
+  - `/backend/prisma/schema.prisma` apontando para o schema do projeto
+  - `/backend/.env` atualizado com DATABASE_URL local
+- **Validação**: `npx prisma generate` OK; schema válido
+- **Notas**: PostgreSQL como provider; JSONB para conteúdos/metadata; índices adicionados

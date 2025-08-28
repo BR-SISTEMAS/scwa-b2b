@@ -1,0 +1,18 @@
+# Arquivos criados na tarefa T1.002
+# [S1][T1.002] - Prisma setup and schema init
+# Data: 2025-08-28
+
+## Arquivos a serem criados:
+/database/schema_T1.002.prisma - Schema do Prisma com modelos
+/database/.env.example - Template de conexão DB
+/backend/.env - Configuração local de desenvolvimento
+/backend/src/prisma/prisma.service_T1.002.ts - Serviço Prisma
+/backend/src/prisma/prisma.module_T1.002.ts - Módulo Prisma
+
+## Comandos a executar:
+- npm install prisma @prisma/client --prefix backend
+- npx prisma init (dentro do backend)
+
+## Notas:
+- Configurar PostgreSQL como provider
+- Criar todos os modelos definidos no project-manual.xml

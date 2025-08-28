@@ -1,0 +1,12 @@
+Task: [S1][T1.003] - Auth: JWT, roles and password hashing
+Timestamp: 2025-08-28T06:38:10Z
+
+Planned created files:
+- /backend/src/modules/auth/auth.module_T1.003.ts
+- /backend/src/modules/auth/jwt.strategy_T1.003.ts
+- /backend/src/modules/auth/local.strategy_T1.003.ts
+
+Created files (done):
+- /backend/src/modules/auth/auth.module_T1.003.ts
+- /backend/src/modules/auth/jwt.strategy_T1.003.ts
+- /backend/src/modules/auth/local.strategy_T1.003.ts

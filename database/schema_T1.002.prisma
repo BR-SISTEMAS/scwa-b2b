@@ -1,0 +1,194 @@
+// Schema Prisma para Support Chat B2B
+// Task: T1.002 - Prisma & DB connection
+// Este arquivo define todos os modelos conforme project-manual.xml
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum para roles de usuário
+enum UserRole {
+  user
+  agent
+  manager
+  admin
+}
+
+// Enum para status de conversa
+enum ConversationStatus {
+  open
+  waiting
+  assigned
+  closed
+}
+
+// Enum para tipo de remetente
+enum SenderType {
+  client
+  agent
+  system
+}
+
+// Enum para status de ticket
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+// Model: Empresas (multi-tenant)
+model Company {
+  id            String         @id @default(uuid())
+  name          String         @db.VarChar(255)
+  cnpj          String         @unique @db.VarChar(20)
+  contactEmail  String         @map("contact_email") @db.VarChar(255)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  
+  // Relations
+  users         User[]
+  conversations Conversation[]
+  
+  @@map("companies")
+}
+
+// Model: Usuários
+model User {
+  id              String         @id @default(uuid())
+  companyId       String         @map("company_id")
+  email           String         @unique @db.VarChar(255)
+  passwordHash    String         @map("password_hash") @db.VarChar(255)
+  name            String         @db.VarChar(255)
+  role            UserRole       @default(user)
+  profilePhotoUrl String?        @map("profile_photo_url") @db.VarChar(512)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  
+  // Relations
+  company               Company        @relation(fields: [companyId], references: [id])
+  clientConversations   Conversation[] @relation("ClientConversations")
+  agentConversations    Conversation[] @relation("AgentConversations")
+  messages              Message[]
+  createdTickets        Ticket[]       @relation("CreatedTickets")
+  assignedTickets       Ticket[]       @relation("AssignedTickets")
+  auditLogs             AuditLog[]
+  
+  @@index([companyId])
+  @@map("users")
+}
+
+// Model: Conversas
+model Conversation {
+  id            String              @id @default(uuid())
+  companyId     String              @map("company_id")
+  clientUserId  String?             @map("client_user_id")
+  agentUserId   String?             @map("agent_user_id")
+  status        ConversationStatus  @default(open)
+  queuePosition Int?                @map("queue_position")
+  startedAt     DateTime            @default(now()) @map("started_at")
+  closedAt      DateTime?           @map("closed_at")
+  metadata      Json?               @db.JsonB
+  
+  // Relations
+  company       Company             @relation(fields: [companyId], references: [id])
+  client        User?               @relation("ClientConversations", fields: [clientUserId], references: [id])
+  agent         User?               @relation("AgentConversations", fields: [agentUserId], references: [id])
+  messages      Message[]
+  tickets       Ticket[]
+  evaluations   Evaluation[]
+  
+  @@index([companyId])
+  @@index([clientUserId])
+  @@index([agentUserId])
+  @@index([status, queuePosition])
+  @@map("conversations")
+}
+
+// Model: Mensagens
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  senderId       String?      @map("sender_id")
+  senderType     SenderType   @map("sender_type")
+  contentJson    Json         @map("content_json") @db.JsonB
+  contentText    String       @map("content_text") @db.Text
+  attachments    Json?        @db.JsonB
+  audioUrl       String?      @map("audio_url") @db.VarChar(512)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?        @relation(fields: [senderId], references: [id])
+  
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// Model: Tickets (OS - Ordem de Serviço)
+model Ticket {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  title          String       @db.VarChar(255)
+  description    String       @db.Text
+  status         TicketStatus @default(open)
+  createdById    String       @map("created_by")
+  assignedToId   String?      @map("assigned_to")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  createdBy      User         @relation("CreatedTickets", fields: [createdById], references: [id])
+  assignedTo     User?        @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  
+  @@index([conversationId])
+  @@index([status])
+  @@map("tickets")
+}
+
+// Model: Avaliações
+model Evaluation {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  rating         Int
+  comment        String?      @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at")
+  
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  
+  @@index([conversationId])
+  @@map("evaluations")
+}
+
+// Model: Logs de Auditoria (LGPD)
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String   @map("actor_id")
+  action    String   @db.VarChar(255)
+  payload   Json     @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  actor     User     @relation(fields: [actorId], references: [id])
+  
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Model: Cache de Métricas
+model MetricsCache {
+  id        String   @id @default(uuid())
+  key       String   @unique @db.VarChar(255)
+  value     Json     @db.JsonB
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@index([key])
+  @@map("metrics_cache")
+}
