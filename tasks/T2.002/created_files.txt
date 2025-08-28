@@ -1,0 +1,17 @@
+# T2.002 - Login pages (client & agent)
+
+Arquivos/itens planejados:
+- frontend/src/components/AuthForm_T2.002.tsx
+- frontend/src/app/login/client/page.tsx
+- frontend/src/app/login/agent/page.tsx
+- ops/tests/playwright/login_T2.002.spec.ts
+
+Notas:
+- Usar Tailwind v4 + componentes simples (shadcn será inicializado na sequência conforme docs React 19)
+- Endpoint alvo: ${NEXT_PUBLIC_API_BASE_URL}/api/auth/login (POST)
+
+Arquivos criados:
+- frontend/src/components/AuthForm_T2.002.tsx
+- frontend/src/app/login/client/page.tsx
+- frontend/src/app/login/agent/page.tsx
+- ops/tests/playwright/login_T2.002.spec.ts
