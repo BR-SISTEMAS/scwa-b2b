@@ -11,7 +11,7 @@
     <primary-stack>
       <frontend>Next.js (React) + shadcn/ui + Tailwind</frontend>
       <backend>NestJS (Node.js) + Socket.IO</backend>
-      <database>PostgreSQL (preferência) - Prisma ORM</database>
+      <database>MariaDB - Prisma ORM</database>
       <realtime>Socket.IO</realtime>
       <tests>Playwright (E2E) + Jest (unit)</tests>
       <ci>GitHub Actions</ci>
@@ -89,7 +89,7 @@
   </repository-structure>
 
   <!-- Database schema (core tables) -->
-  <database-schema engine="postgresql" orm="prisma">
+  <database-schema engine="mariadb" orm="prisma">
     <table name="companies">
       <column name="id" type="uuid" pk="true" />
       <column name="name" type="varchar(255)" />
