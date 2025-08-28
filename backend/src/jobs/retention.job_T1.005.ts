@@ -65,7 +65,7 @@ export class RetentionJob {
         entity: 'users',
         retentionDays: parseInt(process.env.USER_DATA_RETENTION_DAYS || '1095', 10), // 3 anos
         field: 'lastActivityAt',
-        conditions: { isDeleted: false, role: 'client' },
+        conditions: { role: 'user' },
       });
     }
   }
@@ -77,7 +77,7 @@ export class RetentionJob {
   async executeRetentionPolicies() {
     this.logger.log('Starting retention job execution');
     const startTime = Date.now();
-    const results = [];
+    const results: any[] = [];
 
     for (const policy of this.retentionPolicies) {
       try {
@@ -173,7 +173,7 @@ export class RetentionJob {
     // TODO: Implementar exclusão de arquivos físicos do storage
     for (const message of messages) {
       if (message.attachments || message.audioUrl) {
-        await this.deleteAttachments(message.attachments as any, message.audioUrl);
+        await this.deleteAttachments(message.attachments as any, message.audioUrl || undefined);
       }
     }
 
@@ -266,8 +266,6 @@ export class RetentionJob {
             name: 'Usuário Removido',
             passwordHash: 'DELETED',
             profilePhotoUrl: null,
-            isDeleted: true,
-            deletedAt: new Date(),
           },
         });
 
@@ -339,8 +337,8 @@ export class RetentionJob {
     stats.counts.auditLogs = await this.prisma.auditLog.count();
     stats.counts.evaluations = await this.prisma.evaluation.count();
     stats.counts.tickets = await this.prisma.ticket.count();
-    stats.counts.users = await this.prisma.user.count({ where: { isDeleted: false } });
-    stats.counts.deletedUsers = await this.prisma.user.count({ where: { isDeleted: true } });
+    stats.counts.users = await this.prisma.user.count();
+    stats.counts.deletedUsers = 0; // Field isDeleted does not exist
 
     // Busca registros mais antigos
     const oldestMessage = await this.prisma.message.findFirst({
@@ -368,39 +366,43 @@ export class RetentionJob {
    * Verifica conformidade LGPD para um usuário específico
    */
   async checkLGPDCompliance(userId: string): Promise<any> {
-    const compliance = {
+    const compliance: any = {
       userId,
       dataFound: {},
-      recommendations: [],
+      recommendations: [] as string[],
     };
 
     // Verifica dados do usuário
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        conversations: true,
-        messages: true,
-      },
     });
 
     if (user) {
       compliance.dataFound.user = {
         exists: true,
-        isDeleted: user.isDeleted,
-        deletedAt: user.deletedAt,
+        email: user.email,
+        name: user.name,
       };
 
-      compliance.dataFound.conversations = user.conversations.length;
-      compliance.dataFound.messages = user.messages.length;
+      // Count related data
+      const conversationCount = await this.prisma.conversation.count({
+        where: { OR: [{ clientUserId: userId }, { agentUserId: userId }] },
+      });
+      const messageCount = await this.prisma.message.count({
+        where: { senderId: userId },
+      });
+
+      compliance.dataFound.conversations = conversationCount;
+      compliance.dataFound.messages = messageCount;
 
       // Recomendações baseadas nos dados encontrados
-      if (!user.isDeleted && user.conversations.length > 0) {
+      if (conversationCount > 0) {
         compliance.recommendations.push(
           'Usuário tem conversas ativas. Considere anonimização se inativo.',
         );
       }
 
-      if (user.messages.length > 100) {
+      if (messageCount > 100) {
         compliance.recommendations.push(
           'Usuário tem muitas mensagens. Considere aplicar política de retenção.',
         );

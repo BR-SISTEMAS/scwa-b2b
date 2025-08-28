@@ -1,0 +1,28 @@
+# Task T3.001 - Conversation start endpoint & queue logic
+# Date: 2025-08-28
+# Sprint: S3 - Chat core & realtime
+# Status: COMPLETED
+
+## Files created:
+- /backend/src/modules/chats/chats.controller_T3.001.ts
+- /backend/src/modules/chats/chats.service_T3.001.ts
+- /backend/src/modules/chats/chats.module_T3.001.ts
+- /backend/src/modules/chats/dto/start-conversation.dto_T3.001.ts
+- /backend/src/modules/chats/dto/update-queue.dto_T3.001.ts
+
+## Files modified:
+- /backend/src/app.module.ts (added ChatsModule import)
+
+## Dependencies installed:
+- None (all NestJS dependencies already present)
+
+## Validation performed:
+- TypeScript compilation: PASSED (with warnings about missing auth guards)
+- Unit tests: NOT RUN (no tests created yet)
+- E2E tests: NOT RUN
+
+## Notes:
+- Queue logic implemented with incremental position calculation
+- Time estimation: 5 minutes per position in queue
+- TODO: Add authentication guards
+- TODO: Add WebSocket events for real-time queue updates

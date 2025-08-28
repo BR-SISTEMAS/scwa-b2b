@@ -1,0 +1,32 @@
+# Task T3.002 - Socket.IO integration (server) and channel model
+# Date: 2025-08-28
+# Sprint: S3 - Chat core & realtime
+# Status: COMPLETED
+
+## Files created:
+- /backend/src/modules/chats/socket.gateway_T3.002.ts
+- /backend/src/modules/chats/events_T3.002.ts
+- /backend/src/modules/chats/interfaces/socket-events.interface_T3.002.ts
+- /backend/src/modules/chats/chats.module_T3.002.ts (updated version with Socket Gateway)
+
+## Files modified:
+- /backend/src/app.module.ts (updated ChatsModule import)
+
+## Dependencies installed:
+- @nestjs/websockets
+- @nestjs/platform-socket.io
+- socket.io
+
+## Validation performed:
+- TypeScript compilation: PARTIAL (missing dependencies from T3.001 not in main)
+- Unit tests: NOT RUN
+- E2E tests: NOT RUN
+- WebSocket connection test: NOT RUN
+
+## Notes:
+- WebSocket Gateway implemented with Socket.IO
+- Events: join, leave, sendMessage, typing, queueUpdate
+- Room-based messaging for conversations
+- Typing indicators with timeout
+- TODO: Add authentication middleware for sockets
+- TODO: Add rate limiting for messages

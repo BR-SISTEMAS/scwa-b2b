@@ -390,3 +390,84 @@ Todas as 5 tarefas do Sprint 1 foram completadas com sucesso:
 - **Validação**: TypeScript compilando, estrutura integrada ao AppModule
 - **Notas**: Integração com Prisma models (Conversation, Message); TODOs para guards de auth
 - **Commit**: 55e54be
+
+#### [S3][T3.002] - Socket.IO integration (server) and channel model
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Branch**: sprint/S3_task_T3.002-socket-server
+- **PR**: #5 (aberto)
+- **Arquivos criados**:
+  - `/backend/src/modules/chats/socket.gateway_T3.002.ts` - WebSocket Gateway principal
+  - `/backend/src/modules/chats/events_T3.002.ts` - Constantes de eventos Socket.IO
+  - `/backend/src/modules/chats/interfaces/socket-events.interface_T3.002.ts` - Interfaces TypeScript
+  - `/backend/src/modules/chats/chats.module_T3.002.ts` - Módulo atualizado com Gateway
+- **Funcionalidades implementadas**:
+  - WebSocket Gateway com Socket.IO integrado ao NestJS
+  - Eventos: join, leave, sendMessage, typing, stopTyping, queueUpdate
+  - Sistema de salas (rooms) por conversationId
+  - Indicadores de digitação com timeout de 3 segundos
+  - Broadcast de atualizações de fila em tempo real
+  - Gerenciamento de conexões com Map de sockets
+- **Dependências instaladas**:
+  - @nestjs/websockets, @nestjs/platform-socket.io, socket.io
+- **Validação**: Build parcial (dependências de T3.001 não em main)
+- **Notas**: Necessita middleware de autenticação; Rate limiting pendente
+- **Commit**: a7e8f23
+
+#### [S3][T3.003] - Socket hooks (client) and chat UI basic
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Branch**: sprint/S3_task_T3.003-chat-ui
+- **PR**: #6 (aberto)
+- **Arquivos criados**:
+  - `/frontend/src/hooks/useSocket_T3.003.ts` - Hook React para Socket.IO
+  - `/frontend/src/components/chat/ChatWindow_T3.003.tsx` - Container principal do chat
+  - `/frontend/src/components/chat/MessageList_T3.003.tsx` - Lista de mensagens
+  - `/frontend/src/components/chat/MessageInput_T3.003.tsx` - Input com indicadores
+  - `/frontend/src/components/chat/QueueStatus_T3.003.tsx` - Widget de status da fila
+  - `/frontend/src/app/chat/page_T3.003.tsx` - Página Next.js do chat
+- **Funcionalidades implementadas**:
+  - Conexão Socket.IO real-time com reconexão automática
+  - Indicadores de digitação em tempo real
+  - Auto-scroll para novas mensagens
+  - Notificações toast para eventos
+  - Layout responsivo mobile-first
+  - Timestamps formatados (hoje, ontem, data)
+  - Status de entrega das mensagens
+- **Dependências instaladas**:
+  - socket.io-client, date-fns, lucide-react
+- **Validação**: Build OK, componentes funcionais
+- **Notas**: TODOs: autenticação, upload de arquivos, emojis, mensagens de voz
+- **Commit**: d3a7c65
+
+#### [S3][T3.004] - Attachments, uploads and audio recording
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Branch**: sprint/S3_task_T3.004-attachments
+- **PR**: #7 (aberto)
+- **Arquivos criados**:
+  - **Backend**:
+    - `/backend/src/modules/chats/attachments.controller_T3.004.ts` - API REST para uploads
+    - `/backend/src/modules/chats/attachments.service_T3.004.ts` - Lógica de anexos
+    - `/backend/src/modules/chats/dto/upload-attachment.dto_T3.004.ts` - DTOs com validação
+  - **Frontend**:
+    - `/frontend/src/components/UploadAttachment_T3.004.tsx` - Drag-and-drop com preview
+    - `/frontend/src/components/AudioRecorder_T3.004.tsx` - Gravação de áudio
+    - `/frontend/src/hooks/useAudioRecorder_T3.004.ts` - Hook para MediaRecorder API
+    - `/frontend/src/components/ui/alert.tsx` - Componente de alerta
+    - `/frontend/src/components/ui/progress.tsx` - Barra de progresso
+- **Funcionalidades implementadas**:
+  - Upload de arquivos até 50MB com validação MIME
+  - Drag-and-drop com react-dropzone
+  - Preview de imagens antes do upload
+  - Gravação de áudio com MediaRecorder API
+  - Visualização waveform com WaveSurfer.js
+  - Progress bar para uploads em tempo real
+  - Sistema de segurança contra arquivos executáveis
+  - Categorização por tipo (IMAGE, DOCUMENT, AUDIO, VIDEO, OTHER)
+- **Dependências instaladas**:
+  - Backend: multer, @types/multer
+  - Frontend: react-dropzone, wavesurfer.js, @radix-ui/react-progress
+- **Validação**: Build com warnings (auth guards pendentes)
+- **Notas**: TODOs: S3 storage, thumbnails reais, transcrição de áudio
+- **Commit**: 97c0c24
