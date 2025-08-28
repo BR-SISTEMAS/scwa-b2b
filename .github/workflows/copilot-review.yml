@@ -1,0 +1,50 @@
+name: Auto Request Copilot Review
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  request-copilot-review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Request Copilot Review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Add comment requesting Copilot review
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '@copilot review'
+            });
+            
+            console.log(`✅ Copilot review requested for PR #${context.issue.number}`);
+            
+            // Add informative comment about the process
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## 🤖 Automated Review Process Initiated
+            
+            This PR has been automatically submitted for Copilot review. The review process includes:
+            
+            1. **Copilot AI Review** - Code quality, security, and best practices
+            2. **CI/CD Pipeline** - Build, tests, and linting
+            3. **Manual Review** - Final human verification if needed
+            
+            ### Next Steps:
+            - Wait for Copilot review comments
+            - Address any issues raised
+            - Ensure all CI checks pass
+            - PR will be ready for merge once all checks are green ✅
+            
+            ---
+            *This is an automated message following our [PR review process](.github/docs/pr-review-process.md)*`
+            });
