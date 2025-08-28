@@ -91,3 +91,8 @@ tasks/*/changes.diff
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/

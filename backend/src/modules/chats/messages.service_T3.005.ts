@@ -12,8 +12,7 @@ import {
   MessageType 
 } from './dto/save-message.dto_T3.005';
 import { ConversationTranscript, TranscriptMessage } from './interfaces/transcript.interface_T3.005';
-// EventEmitter2 will be imported when @nestjs/event-emitter is installed
-// import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class MessagesService {
@@ -21,7 +20,7 @@ export class MessagesService {
 
   constructor(
     private readonly prisma: PrismaService,
-    // private readonly eventEmitter: EventEmitter2,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -106,10 +105,10 @@ export class MessagesService {
       }
 
       // Emite evento para websocket e outros listeners
-      // this.eventEmitter.emit('message.created', {
-      //   conversationId: dto.conversationId,
-      //   message,
-      // });
+      this.eventEmitter.emit('message.created', {
+        conversationId: dto.conversationId,
+        message,
+      });
 
       this.logger.log(`Message saved: ${message.id} in conversation ${dto.conversationId}`);
 
@@ -159,11 +158,11 @@ export class MessagesService {
     });
 
     // Emite evento de atualização de status
-    // this.eventEmitter.emit('message.status.updated', {
-    //   messageId,
-    //   status,
-    //   userId,
-    // });
+    this.eventEmitter.emit('message.status.updated', {
+      messageId,
+      status,
+      userId,
+    });
 
     this.logger.log(`Message ${messageId} status updated to ${status}`);
   }
@@ -205,11 +204,11 @@ export class MessagesService {
       },
     });
 
-    // this.eventEmitter.emit('message.edited', {
-    //   messageId,
-    //   newContent,
-    //   editedBy,
-    // });
+    this.eventEmitter.emit('message.edited', {
+      messageId,
+      newContent,
+      editedBy,
+    });
 
     this.logger.log(`Message ${messageId} edited by ${editedBy}`);
   }
@@ -249,11 +248,11 @@ export class MessagesService {
       data: { contentJson },
     });
 
-    // this.eventEmitter.emit('message.reaction.added', {
-    //   messageId,
-    //   emoji,
-    //   userId,
-    // });
+    this.eventEmitter.emit('message.reaction.added', {
+      messageId,
+      emoji,
+      userId,
+    });
   }
 
   /**
@@ -289,11 +288,11 @@ export class MessagesService {
       data: { contentJson },
     });
 
-    // this.eventEmitter.emit('message.reaction.removed', {
-    //   messageId,
-    //   emoji,
-    //   userId,
-    // });
+    this.eventEmitter.emit('message.reaction.removed', {
+      messageId,
+      emoji,
+      userId,
+    });
   }
 
   /**

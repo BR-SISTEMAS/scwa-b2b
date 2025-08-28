@@ -13,7 +13,7 @@ import { Logger, UseGuards, Injectable } from '@nestjs/common'
 import { Server, Socket } from 'socket.io'
 import { ChatsService_T3_001 } from './chats.service_T3.001'
 import { PrismaService } from '../../prisma/prisma.service_T1.002'
-import { 
+import type { 
   ServerToClientEvents, 
   ClientToServerEvents,
   SocketData,

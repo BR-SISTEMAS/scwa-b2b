@@ -12,14 +12,17 @@ export default function AuthForm_T2_002({ role }: AuthFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Se NEXT_PUBLIC_API_BASE_URL estiver definido, usamos /auth/login diretamente nesse host.
+  // Caso contrário, usamos o proxy local do Next em /api/auth/login (configurado em next.config.ts).
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
+  const loginUrl = apiBase ? `${apiBase}/auth/login` : "/api/auth/login"
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${apiBase}/api/auth/login`, {
+      const res = await fetch(loginUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role }),
@@ -85,7 +88,7 @@ export default function AuthForm_T2_002({ role }: AuthFormProps) {
           {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
-      <p className="mt-3 text-xs text-gray-500">Ambiente: {apiBase || "(local)"}</p>
+      <p className="mt-3 text-xs text-gray-500">Destino da API: {apiBase ? `${apiBase}/auth` : "proxy local /api → backend"}</p>
     </div>
   )
 }

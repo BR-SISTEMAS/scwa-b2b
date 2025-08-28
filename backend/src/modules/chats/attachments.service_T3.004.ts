@@ -197,12 +197,12 @@ export class AttachmentsService {
     const message = await this.prisma.message.findFirst({
       where: {
         contentJson: {
-          path: ['type'],
+          path: '$.type',
           equals: 'attachment',
         },
         AND: {
           contentJson: {
-            path: ['filename'],
+            path: '$.filename',
             equals: filename,
           },
         },
@@ -240,13 +240,13 @@ export class AttachmentsService {
       where: {
         conversationId,
         contentJson: {
-          path: ['type'],
+          path: '$.type',
           equals: 'attachment',
         },
         ...(type && {
           AND: {
             contentJson: {
-              path: ['attachmentType'],
+              path: '$.attachmentType',
               equals: type,
             },
           },
