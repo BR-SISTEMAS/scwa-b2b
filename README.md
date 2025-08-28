@@ -147,7 +147,7 @@ npm update
 ### Sprint S0 - Repository init & infrastructure ✅ COMPLETO
 Inicialização do repositório, configuração de MCPs, README draft, workflows e CI baseline.
 
-### Sprint S1 - Backend foundation  
+### Sprint S1 - Backend foundation 🔨 Em Progresso
 Scaffold NestJS, Prisma, conexão DB, autenticação básica e modelo de usuário.
 
 ### Sprint S2 - Frontend foundation
@@ -217,3 +217,20 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
 - ✅ Docker e workflows prontos
 
 **Próximo Sprint**: S1 - Backend foundation (NestJS, Prisma, Auth)
+
+---
+
+### Sprint S1
+
+#### [S1][T1.001] - Scaffold NestJS app
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Arquivos criados**:
+  - Backend scaffolded com NestJS CLI
+  - 14 arquivos base do NestJS
+  - 9 pastas de módulos: users, auth, chats, tickets, metrics, companies, audit, export, privacy
+- **MCPs utilizados**:
+  - context7: Consulta de documentação NestJS (/nestjs/docs.nestjs.com)
+  - filesystem: Validação de arquivos
+- **Validação**: Projeto NestJS criado com sucesso, TypeScript configurado
+- **Notas**: ESLint, Prettier e Jest pré-configurados pelo NestJS CLI

@@ -1,0 +1,34 @@
+# Arquivos criados na tarefa T1.001
+# [S1][T1.001] - Scaffold NestJS app
+# Data: 2025-08-28
+
+## Arquivos a serem criados pelo NestJS CLI:
+/backend/package.json
+/backend/package-lock.json
+/backend/tsconfig.json
+/backend/tsconfig.build.json
+/backend/nest-cli.json
+/backend/.eslintrc.js
+/backend/.prettierrc
+/backend/.gitignore
+/backend/README.md
+/backend/src/main.ts
+/backend/src/app.module.ts
+/backend/src/app.controller.ts
+/backend/src/app.controller.spec.ts
+/backend/src/app.service.ts
+/backend/test/app.e2e-spec.ts
+/backend/test/jest-e2e.json
+
+## Pastas de módulos a serem criadas:
+/backend/src/modules/users/
+/backend/src/modules/auth/
+/backend/src/modules/chats/
+/backend/src/modules/tickets/
+/backend/src/modules/metrics/
+
+## Notas da Context7:
+- Usar comando: nest new backend --package-manager npm
+- NestJS requer Node.js >= 18
+- Instalação global do CLI: npm i -g @nestjs/cli
+- JWT e Passport serão configurados em T1.003
