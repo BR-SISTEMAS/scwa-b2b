@@ -1,0 +1,20 @@
+# Task T3.002 - Socket.IO integration server
+# Created: 2025-08-28
+# Branch: sprint/S3_task_T3.002-socket-server
+
+## Files created:
+- /backend/src/modules/chats/socket.gateway_T3.002.ts
+- /backend/src/modules/chats/events_T3.002.ts
+- /backend/src/modules/chats/interfaces/socket-events.interface_T3.002.ts
+
+## Dependencies:
+- @nestjs/websockets
+- @nestjs/platform-socket.io
+- socket.io
+
+## Events implemented:
+- connect: Client connection to Socket.IO
+- join: Join conversation room
+- message: Send/receive messages
+- typing: Typing indicators
+- disconnect: Handle disconnection
