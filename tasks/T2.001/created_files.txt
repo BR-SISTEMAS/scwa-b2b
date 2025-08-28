@@ -1,0 +1,23 @@
+# T2.001 - Scaffold Next.js + shadcn/ui
+
+Arquivos/itens planejados para criação/modificação:
+- frontend/** (gerado por create-next-app)
+- frontend/src/styles/theme_T2.001.ts (tokens de tema)
+
+Observações:
+- Será gerado um app Next.js com TypeScript, App Router, Tailwind e alias @/*
+- Instalação de shadcn/ui para UI base
+
+Arquivos efetivamente criados/adicionados:
+- frontend/package.json
+- frontend/tsconfig.json
+- frontend/eslint.config.mjs
+- frontend/next.config.ts
+- frontend/src/app/(layout.tsx,page.tsx,favicon.ico,globals.css)
+- frontend/postcss.config.mjs
+- frontend/public/*
+- frontend/src/styles/theme_T2.001.ts
+
+Notas de compatibilidade:
+- shadcn/ui via npm apresentou erro (EUNSUPPORTEDPROTOCOL workspace:*) com React 19/Next 15.5/Tailwind v4.
+  Próximo passo: usar CLI `npx shadcn@latest init --force` (ajustado para ambiente sem prompts) na T2.002 quando form components forem necessários.
