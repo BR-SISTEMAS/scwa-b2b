@@ -220,6 +220,34 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
 
 ---
 
+### Sprint S3
+
+#### [S3][T3.005] - Persistência de mensagens e salvar transcrições
+- **Status**: ✅ Concluído
+- **Data**: 2025-01-13
+- **Branch**: sprint/S3_task_T3.005-message-persistence
+- **Arquivos criados**: (6 arquivos total)
+  - **Workflow**:
+    - `/.github/workflows/copilot-analysis.yml` - Workflow refatorado do GitHub Copilot com análise prévia
+  - **Backend - DTOs e Interfaces**:
+    - `/backend/src/modules/chats/dto/save-message.dto_T3.005.ts` - DTO para salvar mensagens como JSON
+    - `/backend/src/modules/chats/interfaces/transcript.interface_T3.005.ts` - Interfaces para transcrições
+  - **Backend - Services**:
+    - `/backend/src/modules/chats/messages.service_T3.005.ts` - Service para persistência de mensagens
+    - `/backend/src/jobs/transcript_save.job_T3.005.ts` - Job para gerar e salvar transcrições
+  - **Rastreabilidade**:
+    - `/tasks/T3.005/created_files.txt` - Documentação da task
+- **Funcionalidades implementadas**:
+  - Salvamento de mensagens como JSON estruturado no banco
+  - Suporte a reações, menções, replies e edições de mensagens
+  - Job agendado para gerar transcrições automaticamente
+  - Exportação em lote de transcrições (JSON, CSV, HTML)
+  - Limpeza automática de arquivos antigos
+  - Métricas detalhadas de conversas
+- **Validação**: TypeScript compilação OK para arquivos T3.005
+- **Notas**: EventEmitter2 comentado até instalação do @nestjs/event-emitter
+- **PR**: Aguardando criação
+
 ### Sprint S1
 
 #### [S1][T1.001] - Scaffold NestJS app
