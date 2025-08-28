@@ -1,0 +1,16 @@
+# Arquivos criados na tarefa T3.004 - Attachments, uploads and audio recording
+# Data: 2025-08-28
+# Sprint: S3 - Chat core & realtime
+
+## Backend:
+- /backend/src/modules/chats/attachments.controller_T3.004.ts
+- /backend/src/modules/chats/attachments.service_T3.004.ts
+- /backend/src/modules/chats/dto/upload-attachment.dto_T3.004.ts
+
+## Frontend:
+- /frontend/src/components/UploadAttachment_T3.004.tsx
+- /frontend/src/components/AudioRecorder_T3.004.tsx
+- /frontend/src/hooks/useAudioRecorder_T3.004.ts
+
+## Outros:
+- /tasks/T3.004/created_files.txt (este arquivo)
