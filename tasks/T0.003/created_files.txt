@@ -1,0 +1,16 @@
+# Arquivos criados/modificados na tarefa T0.003
+# [S0][T0.003] - Ops workflows, docker-compose and CI baseline
+# Data: 2025-08-28
+
+## Arquivos criados:
+/.github/workflows/ci.yml - Pipeline CI do GitHub Actions
+/package.json - Scripts globais do projeto
+
+## Arquivos já existentes (criados em T0.001):
+/ops/warp.yaml - Workflows do Warp
+/docker-compose.yml - Orquestração Docker
+
+## Notas:
+- CI configurado para rodar em push e pull requests
+- Pipeline com jobs para lint, build e testes
+- Suporte para frontend e backend (serão implementados em sprints futuros)

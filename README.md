@@ -144,7 +144,7 @@ npm update
 
 ## Estrutura de Sprints
 
-### Sprint S0 - Repository init & infrastructure ✅ Em Progresso
+### Sprint S0 - Repository init & infrastructure ✅ COMPLETO
 Inicialização do repositório, configuração de MCPs, README draft, workflows e CI baseline.
 
 ### Sprint S1 - Backend foundation  
@@ -192,3 +192,28 @@ Hardening de segurança, SAST, auditoria de dependências, imagens Docker de pro
   - `project-manual.xml` - Confirmado na raiz do projeto
 - **Validação**: Documentação completa e acessível
 - **Notas**: README agora inclui seção detalhada "Como eu opero" e guia completo de contribuição
+- **Commit**: ad1a8c2
+
+#### [S0][T0.003] - Ops workflows, docker-compose and CI baseline
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Arquivos criados**:
+  - `/.github/workflows/ci.yml` - Pipeline CI completo com lint, build, testes, segurança
+  - `/package.json` - Scripts globais do projeto e configuração de workspaces
+- **Arquivos verificados**:
+  - `/ops/warp.yaml` - Workflows do Warp (criado em T0.001)
+  - `/docker-compose.yml` - Orquestração Docker (criado em T0.001)
+- **Validação**: CI configurado com suporte futuro para projetos não implementados
+- **Notas**: Pipeline inclui segurança (Trivy), path filtering, e serviços de teste
+
+---
+
+### 🎉 Sprint S0 Concluído!
+
+Todas as tarefas de infraestrutura foram completadas com sucesso:
+- ✅ Estrutura do repositório criada
+- ✅ Documentação completa
+- ✅ CI/CD configurado
+- ✅ Docker e workflows prontos
+
+**Próximo Sprint**: S1 - Backend foundation (NestJS, Prisma, Auth)
