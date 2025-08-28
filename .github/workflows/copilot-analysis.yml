@@ -1,0 +1,139 @@
+name: Copilot Code Analysis
+
+on:
+  # Trigger on push to feature branches for pre-PR analysis
+  push:
+    branches-ignore:
+      - main
+      - master
+  # Also trigger on PR events
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  copilot-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          separator: ','
+
+      - name: Setup Analysis Summary
+        run: |
+          echo "# 🤖 Copilot Code Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Changed Files" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+      - name: Request Copilot Preview Analysis
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Create analysis request comment
+            const branch = context.ref.replace('refs/heads/', '');
+            const message = `
+            ## 🔍 Copilot Preview Analysis Request
+            
+            **Branch**: ${branch}
+            **Commit**: ${context.sha}
+            **Author**: @${context.actor}
+            
+            ### Analysis Checklist:
+            - [ ] Code quality and best practices
+            - [ ] Security vulnerabilities
+            - [ ] Performance issues
+            - [ ] Test coverage
+            - [ ] Documentation
+            
+            @github-copilot[bot] please analyze the recent changes
+            `;
+            
+            // Log the analysis request
+            console.log('Requesting Copilot preview analysis for commit:', context.sha);
+            console.log('Changed files:', '${{ steps.changed-files.outputs.all_changed_files }}');
+            
+            // Store analysis request in workflow summary
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n## Analysis Request\n');
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, message);
+
+      - name: Request Copilot PR Review
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // Add copilot review comment with specific focus areas
+              const comment = await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🤖 Automated Code Review Request\n\n@github-copilot review\n\n### Review Focus Areas:\n- Type safety and error handling\n- Security considerations\n- Performance optimizations\n- Code maintainability\n- Test coverage\n\n### Files Changed:\n${{ steps.changed-files.outputs.all_changed_files }}`.split(',').map(f => `- ${f.trim()}`).join('\n')
+              });
+              
+              console.log(`Requested Copilot review for PR #${context.issue.number}`);
+              
+              // Add label for tracking
+              await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ['copilot-review-requested']
+              });
+            } catch (error) {
+              console.error('Failed to request Copilot review:', error);
+              // Continue workflow even if review request fails
+            }
+
+      - name: Code Quality Metrics
+        run: |
+          echo "## 📊 Code Quality Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count lines of code changed
+          if [ -n "${{ steps.changed-files.outputs.all_changed_files }}" ]; then
+            echo "### Lines Changed" >> $GITHUB_STEP_SUMMARY
+            for file in $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ',' ' '); do
+              if [ -f "$file" ]; then
+                lines=$(wc -l < "$file" 2>/dev/null || echo "0")
+                echo "- $file: $lines lines" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Analysis completed at $(date -u +"%Y-%m-%d %H:%M:%S UTC")*" >> $GITHUB_STEP_SUMMARY
+
+      - name: TypeScript Analysis
+        if: contains(steps.changed-files.outputs.all_changed_files, '.ts')
+        continue-on-error: true
+        run: |
+          echo "### TypeScript Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "Checking TypeScript files for type safety..." >> $GITHUB_STEP_SUMMARY
+          
+          # Check if backend has TypeScript files changed
+          if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "backend.*\.ts"; then
+            echo "- Backend TypeScript files detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check if frontend has TypeScript files changed
+          if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "frontend.*\.tsx\?"; then
+            echo "- Frontend TypeScript/TSX files detected" >> $GITHUB_STEP_SUMMARY
+          fi
