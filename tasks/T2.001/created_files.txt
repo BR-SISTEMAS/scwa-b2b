@@ -1,0 +1,28 @@
+# Arquivos criados para T2.001 - Scaffold Next.js + shadcn/ui
+# Data: 28/08/2025
+
+# Frontend Next.js App
+/frontend/package.json
+/frontend/tsconfig.json
+/frontend/next.config.js
+/frontend/tailwind.config.ts
+/frontend/postcss.config.js
+/frontend/.eslintrc.json
+/frontend/.gitignore
+
+# Estrutura de pastas
+/frontend/src/app/
+/frontend/src/components/
+/frontend/src/lib/
+/frontend/src/styles/
+
+# Arquivos principais
+/frontend/src/app/layout.tsx
+/frontend/src/app/page.tsx
+/frontend/src/app/globals.css
+/frontend/src/styles/theme_T2.001.ts
+/frontend/src/lib/utils.ts
+/frontend/components.json
+
+# shadcn/ui setup
+/frontend/src/components/ui/
