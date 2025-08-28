@@ -2,6 +2,8 @@
 
 Sistema de chat de suporte B2B multi-tenant com fila de atendimento, transferências, histórico exportável e conformidade LGPD.
 
+📋 **Documentação Técnica Completa**: Ver arquivo `project-manual.xml` para especificações detalhadas de tarefas, sprints e arquitetura.
+
 ## Stack Tecnológico
 
 - **Frontend**: Next.js (React) + shadcn/ui + Tailwind CSS
@@ -14,8 +16,21 @@ Sistema de chat de suporte B2B multi-tenant com fila de atendimento, transferên
 
 ## Como eu (Agente) Opero
 
-Sigo rigorosamente o arquivo `project-manual.xml` que contém todas as definições de tarefas, sprints e convenções. Utilizo os seguintes MCPs:
+Sigo rigorosamente o arquivo `project-manual.xml` que contém todas as definições de tarefas, sprints e convenções. Meu fluxo de trabalho segue 10 passos definidos:
 
+### Rotina de Execução de Tarefas
+1. **Identificar tarefa** - Leio README.md e manual-xml para determinar próxima tarefa pendente
+2. **Criar pasta da tarefa** - Crio `/tasks/T{S}.{NNN}/` com arquivo de rastreamento
+3. **Consultar documentação** - Uso context7 MCP quando detalhes de implementação não são claros
+4. **Implementar** - Crio/modifico arquivos sempre com sufixo TaskID
+5. **Validar localmente** - Executo linters, testes unitários e build
+6. **Validar E2E** - Executo testes Playwright relevantes via MCP
+7. **Logs de auditoria** - Registro ações no sistema de auditoria
+8. **Git commit** - Crio branch, faço commit seguindo convenção
+9. **Atualizar README** - Adiciono resumo da tarefa completa
+10. **Notas finais** - Registro bibliotecas novas ou considerações especiais
+
+### MCPs Utilizados
 1. **filesystem**: Para validar/listar arquivos antes de edições
 2. **context7**: Para consultar uso de bibliotecas e melhores práticas
 3. **playwright**: Para executar testes E2E após implementações
@@ -50,28 +65,81 @@ Ver arquivo `.env.example` para configuração completa. Principais:
 - `SMTP_HOST` - Serviço de email para exportações
 - `RETENTION_DAYS` - Período de retenção LGPD
 
+## Guia de Contribuição
+
+### Fluxo de Desenvolvimento
+1. Consulte `project-manual.xml` para a próxima tarefa
+2. Crie branch seguindo padrão: `sprint/S{S}_task_T{S}.{NNN}-{desc}`
+3. Implemente seguindo convenções de nomenclatura (sufixo TaskID)
+4. Execute testes locais antes de commitar
+5. Faça commit com mensagem padrão: `[S{S}][T{S}.{NNN}] - descrição`
+6. Abra PR seguindo formato: `PR: S{S} - T{S}.{NNN} - descrição`
+
+### Padrões de Código
+- TypeScript para frontend e backend
+- ESLint + Prettier para formatação
+- Testes obrigatórios (cobertura mínima 70% backend)
+- Documentação inline para funções complexas
+- Interfaces tipadas para todas as APIs
+
 ## Comandos de Desenvolvimento
 
 ```bash
+# === DESENVOLVIMENTO LOCAL ===
 # Frontend
 cd frontend && npm run dev
 
 # Backend  
 cd backend && npm run start:dev
 
-# Database
+# === DATABASE ===
+# Criar migration
+cd backend && npx prisma migrate dev --name nome_da_migration
+
+# Aplicar migrations
 npx prisma migrate dev --preview-feature
+
+# Seed database
 node ./database/seed/seed.js
 
-# Build
+# Abrir Prisma Studio
+cd backend && npx prisma studio
+
+# === BUILD & DEPLOY ===
+# Build local
 npm run build --prefix frontend
 npm run build --prefix backend
 
-# Docker
-docker compose up --build
+# Docker desenvolvimento
+docker compose up postgres redis minio -d
 
-# Testes
+# Docker completo (com app)
+docker compose --profile app up --build
+
+# Docker produção
+docker compose --profile production up --build
+
+# === TESTES ===
+# Testes unitários
+npm test --prefix backend
+npm test --prefix frontend
+
+# Testes E2E
 npx playwright test --project=chromium
+
+# Testes com UI
+npx playwright test --ui
+
+# === UTILIDADES ===
+# Limpar e reinstalar dependências
+rm -rf node_modules package-lock.json
+npm install
+
+# Verificar vulnerabilidades
+npm audit
+
+# Atualizar dependências
+npm update
 ```
 
 ## Estrutura de Sprints
@@ -110,6 +178,17 @@ Hardening de segurança, SAST, auditoria de dependências, imagens Docker de pro
   - Estrutura completa de diretórios
   - `/README.md` (este arquivo)
   - `/tasks/T0.001/created_files.txt`
-  - `.env.example`, `docker-compose.yml`, `/ops/warp.yaml` (próximos passos)
+  - `.env.example`, `docker-compose.yml`, `/ops/warp.yaml`
 - **Validação**: Estrutura de pastas criada, MCPs configurados no Warp
 - **Notas**: Repositório inicializado com estrutura base conforme project-manual.xml
+- **Commit**: d17c849
+
+#### [S0][T0.002] - README initial and manual-xml
+- **Status**: ✅ Concluído  
+- **Data**: 2025-08-28
+- **Arquivos modificados**:
+  - `/README.md` - Aprimorado com guia de contribuição, comandos detalhados e rotina de 10 passos
+- **Arquivos verificados**:
+  - `project-manual.xml` - Confirmado na raiz do projeto
+- **Validação**: Documentação completa e acessível
+- **Notas**: README agora inclui seção detalhada "Como eu opero" e guia completo de contribuição

@@ -1,0 +1,15 @@
+# Arquivos criados/modificados na tarefa T0.002
+# [S0][T0.002] - Create README initial & manual-xml
+# Data: 2025-08-28
+
+## Arquivos modificados:
+/README.md - Aprimorado com guia de contribuição detalhado
+
+## Arquivos verificados:
+/project-manual.xml - Já existente, verificado estar na raiz
+
+## Notas:
+- README.md foi expandido com seção detalhada de contribuição
+- Seção "Como eu opero" foi melhorada com detalhes de MCPs
+- Comandos de deploy adicionados
+- Estrutura de sprints mantida e melhorada
