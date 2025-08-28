@@ -1,0 +1,29 @@
+# Task T3.005 - Persist messages as JSON and transcript storage
+# Date: 2025-08-28
+# Sprint: S3 - Chat core & realtime
+# Status: IN PROGRESS
+
+## Files to be created:
+- /backend/src/modules/chats/messages.service_T3.005.ts
+- /backend/src/jobs/transcript_save.job_T3.005.ts
+- /backend/src/modules/chats/dto/save-message.dto_T3.005.ts
+- /backend/src/modules/chats/interfaces/transcript.interface_T3.005.ts
+
+## Files to be modified:
+- /backend/src/modules/chats/chats.module.ts (add MessagesService)
+- /backend/src/jobs/jobs.module.ts (add TranscriptSaveJob)
+- .github/workflows/copilot-review.yml (update for pre-PR analysis)
+
+## Dependencies to install:
+- None (all required packages already installed)
+
+## Validation to perform:
+- Ensure message JSON stored in messages.content_json
+- Transcript JSON generated for conversation
+- TypeScript compilation successful
+- Unit tests for message persistence
+
+## Notes:
+- Messages stored as JSONB in PostgreSQL
+- Transcript generation runs as background job
+- Support for multiple message formats (text, attachment, system)
