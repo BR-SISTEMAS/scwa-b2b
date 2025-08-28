@@ -1,0 +1,32 @@
+Task: [S1][T1.004] - Users & companies CRUD
+Timestamp: 2025-08-28T06:58:54Z
+
+Files to be created (as per manual):
+- /backend/src/modules/users/users.service_T1.004.ts
+- /backend/src/modules/users/users.controller_T1.004.ts
+- /backend/src/modules/companies/companies.service_T1.004.ts
+
+Additional files needed for complete implementation:
+- /backend/src/modules/users/users.module_T1.004.ts
+- /backend/src/modules/companies/companies.module_T1.004.ts
+- /backend/src/modules/companies/companies.controller_T1.004.ts
+- /backend/src/modules/users/dto/create-user.dto_T1.004.ts
+- /backend/src/modules/users/dto/update-user.dto_T1.004.ts
+- /backend/src/modules/companies/dto/create-company.dto_T1.004.ts
+- /backend/src/modules/companies/dto/update-company.dto_T1.004.ts
+- /backend/src/modules/auth/auth.service_T1.004.ts
+
+Total files: 11
+
+Actual files created:
+✓ /backend/src/modules/auth/auth.service_T1.004.ts
+✓ /backend/src/modules/users/dto/create-user.dto_T1.004.ts
+✓ /backend/src/modules/users/dto/update-user.dto_T1.004.ts
+✓ /backend/src/modules/users/users.service_T1.004.ts
+✓ /backend/src/modules/users/users.controller_T1.004.ts
+✓ /backend/src/modules/users/users.module_T1.004.ts
+✓ /backend/src/modules/companies/dto/create-company.dto_T1.004.ts
+✓ /backend/src/modules/companies/dto/update-company.dto_T1.004.ts
+✓ /backend/src/modules/companies/companies.service_T1.004.ts
+✓ /backend/src/modules/companies/companies.controller_T1.004.ts
+✓ /backend/src/modules/companies/companies.module_T1.004.ts
