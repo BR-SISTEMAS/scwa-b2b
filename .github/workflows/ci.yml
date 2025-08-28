@@ -57,8 +57,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: './${{ matrix.project }}/package-lock.json'
       
       - name: Check if project exists
         id: check_project
@@ -101,8 +99,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: './${{ matrix.project }}/package-lock.json'
       
       - name: Check if project exists
         id: check_project
@@ -172,8 +168,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: './${{ matrix.project }}/package-lock.json'
       
       - name: Check if project exists
         id: check_project
