@@ -1,0 +1,11 @@
+# T3.001 - Conversation start endpoint & queue logic
+
+Arquivos planejados conforme manual:
+- /backend/src/modules/chats/chats.controller_T3.001.ts
+- /backend/src/modules/chats/chats.service_T3.001.ts
+- /backend/src/modules/chats/chats.module_T3.001.ts
+- /backend/src/modules/chats/dto/start-conversation.dto_T3.001.ts
+- /backend/src/modules/chats/dto/update-queue.dto_T3.001.ts
+
+Validação esperada:
+- Simular start conversation e verificar queue_position e conversations record
