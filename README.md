@@ -293,3 +293,34 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
 - **MCPs utilizados**: context7 (consulta Prisma/NestJS best practices)
 - **Notas**: LGPD compliance: soft delete preparado para implementação futura
 - **Commit**: c2896fc
+
+#### [S1][T1.005] - Audit logging & retention job
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Arquivos criados**: (8 arquivos + 2 controllers)
+  - **Módulo de Auditoria**:
+    - `/backend/src/modules/audit/audit.service_T1.005.ts` - Serviço completo de auditoria com métodos especializados
+    - `/backend/src/modules/audit/audit.controller_T1.005.ts` - API endpoints para logs e relatórios
+    - `/backend/src/modules/audit/audit.module_T1.005.ts` - Módulo com ScheduleModule
+    - `/backend/src/modules/audit/dto/create-audit-log.dto_T1.005.ts` - DTOs com enum de ações
+    - `/backend/src/modules/audit/entities/audit-log.entity_T1.005.ts` - Entidades e interfaces
+  - **Jobs de Retenção**:
+    - `/backend/src/jobs/retention.job_T1.005.ts` - Job completo com políticas LGPD
+    - `/backend/src/jobs/jobs.module_T1.005.ts` - Módulo de jobs
+    - `/backend/src/jobs/jobs.controller_T1.005.ts` - Controller para execução manual
+- **Funcionalidades implementadas**:
+  - Log automático de eventos: login, logout, criação/atualização de usuário
+  - Log de operações: atribuição/transferência de conversa
+  - Log de exportações: PDF, XML, dados pessoais (LGPD)
+  - Busca e filtros de logs com paginação
+  - Relatórios de auditoria por empresa com estatísticas
+  - Job automático de retenção (executa diariamente às 2 AM)
+  - Políticas configuráveis por entidade (mensagens, conversas, etc.)
+  - Anonimização automática de usuários inativos (LGPD)
+  - Preservação de logs críticos de LGPD (DATA_EXPORT, DATA_DELETE)
+  - API para verificação de conformidade LGPD por usuário
+  - Execução manual de limpeza via API admin
+- **Dependências instaladas**:
+  - @nestjs/schedule (para cron jobs)
+- **Validação**: Estrutura criada, código TypeScript válido
+- **Notas**: Sistema preparado para integração com S3 para exclusão de arquivos físicos; Logs LGPD preservados indefinidamente
