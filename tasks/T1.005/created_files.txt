@@ -1,0 +1,10 @@
+# Arquivos criados para T1.005 - Audit logging & retention job
+# Data: 28/08/2025
+
+/backend/src/modules/audit/audit.service_T1.005.ts
+/backend/src/modules/audit/audit.module_T1.005.ts
+/backend/src/modules/audit/audit.controller_T1.005.ts
+/backend/src/modules/audit/dto/create-audit-log.dto_T1.005.ts
+/backend/src/modules/audit/entities/audit-log.entity_T1.005.ts
+/backend/src/jobs/retention.job_T1.005.ts
+/backend/src/jobs/jobs.module_T1.005.ts

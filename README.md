@@ -260,3 +260,36 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
 - **Validação**: Build OK, teste unitário OK
 - **Notas**: Strategies scaffolded; AuthService e password hashing a serem expandidos em T1.004
 - **Commit**: e6a82e6
+
+#### [S1][T1.004] - Users and companies CRUD
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Arquivos criados**: (11 arquivos total)
+  - **Auth Service**:
+    - `/backend/src/modules/auth/auth.service_T1.004.ts` - AuthService completo com hash bcrypt
+  - **Users Module**:
+    - `/backend/src/modules/users/users.service_T1.004.ts` - CRUD completo com paginação e filtros
+    - `/backend/src/modules/users/users.controller_T1.004.ts` - REST endpoints
+    - `/backend/src/modules/users/users.module_T1.004.ts` - Module configuration
+    - `/backend/src/modules/users/dto/create-user.dto_T1.004.ts` - DTO com validação
+    - `/backend/src/modules/users/dto/update-user.dto_T1.004.ts` - DTO parcial
+  - **Companies Module**:
+    - `/backend/src/modules/companies/companies.service_T1.004.ts` - CRUD com estatísticas
+    - `/backend/src/modules/companies/companies.controller_T1.004.ts` - REST endpoints
+    - `/backend/src/modules/companies/companies.module_T1.004.ts` - Module configuration
+    - `/backend/src/modules/companies/dto/create-company.dto_T1.004.ts` - DTO com validação CNPJ
+    - `/backend/src/modules/companies/dto/update-company.dto_T1.004.ts` - DTO parcial
+- **Dependências instaladas**:
+  - class-validator, class-transformer, @nestjs/mapped-types
+- **Funcionalidades implementadas**:
+  - CRUD completo para Users e Companies
+  - Hash de senha com bcrypt (10 salt rounds)
+  - Validação de dados com class-validator
+  - Paginação e filtros em listagens
+  - Estatísticas por empresa
+  - Proteção contra exclusão de empresas com dependências
+  - Busca por email (users) e CNPJ (companies)
+- **Validação**: Build OK, teste unitário OK
+- **MCPs utilizados**: context7 (consulta Prisma/NestJS best practices)
+- **Notas**: LGPD compliance: soft delete preparado para implementação futura
+- **Commit**: c2896fc
