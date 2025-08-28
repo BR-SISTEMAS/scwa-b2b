@@ -246,3 +246,17 @@ Todas as tarefas de infraestrutura foram completadas com sucesso:
   - `/backend/.env` atualizado com DATABASE_URL local
 - **Validação**: `npx prisma generate` OK; schema válido
 - **Notas**: PostgreSQL como provider; JSONB para conteúdos/metadata; índices adicionados
+
+#### [S1][T1.003] - Auth and roles implemented
+- **Status**: ✅ Concluído
+- **Data**: 2025-08-28
+- **Arquivos criados**:
+  - `/backend/src/modules/auth/auth.module_T1.003.ts` - AuthModule com configuração JWT
+  - `/backend/src/modules/auth/jwt.strategy_T1.003.ts` - JWT Passport Strategy
+  - `/backend/src/modules/auth/local.strategy_T1.003.ts` - Local Passport Strategy
+- **Dependências instaladas**:
+  - @nestjs/jwt, @nestjs/passport, passport, passport-local, passport-jwt, bcrypt
+  - @types/bcrypt, @types/passport-local, @types/passport-jwt (dev)
+- **Validação**: Build OK, teste unitário OK
+- **Notas**: Strategies scaffolded; AuthService e password hashing a serem expandidos em T1.004
+- **Commit**: e6a82e6
