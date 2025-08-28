@@ -1,0 +1,20 @@
+# Task T3.003 - Chat UI components (client view)
+# Created: 2025-08-28
+# Branch: sprint/S3_task_T3.003-chat-ui
+
+## Files to create:
+- /frontend/src/components/chat/ChatWindow_T3.003.tsx
+- /frontend/src/components/chat/MessageList_T3.003.tsx  
+- /frontend/src/components/chat/MessageInput_T3.003.tsx
+- /frontend/src/components/chat/QueueStatus_T3.003.tsx
+- /frontend/src/hooks/useSocket_T3.003.ts
+- /frontend/src/app/chat/page_T3.003.tsx
+
+## Features:
+- Real-time message display
+- Typing indicators
+- Queue position widget
+- Message input with emoji support
+- File attachment preview
+- Auto-scroll to bottom
+- Responsive layout
